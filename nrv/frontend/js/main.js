@@ -29,22 +29,22 @@ const renderSpectacle = (spectacle) => {
     const artists = spectacle.artistes.map((artist) => escapeHtml(artist.nom)).join(', ');
 
     return `
-        <article class="row">
-            <div class="three columns">
-                ${imageUrl
-                    ? `<img class="u-max-full-width" width="320" height="180" src="${escapeHtml(imageUrl)}" alt="Affiche de ${escapeHtml(spectacle.titre)}" loading="lazy">`
-                    : '<p>Image non renseignée.</p>'}
-            </div>
-            <div class="nine columns">
-                <p>${escapeHtml(spectacle.genre)}</p>
-                <h2>${escapeHtml(spectacle.titre)}</h2>
-                <p>${artists || 'Artiste à annoncer'}</p>
-                <p>${escapeHtml(formatDate(spectacle.date))} · ${escapeHtml(spectacle.horaire)}</p>
-                <button class="button button-primary" type="button" data-soiree-id="${spectacle.id_soiree}">
-                    Voir la soirée
-                </button>
-            </div>
-        </article>`;
+        <a class="spectacle-card" href="#soiree-view" data-soiree-id="${spectacle.id_soiree}">
+            <article class="row">
+                <div class="three columns">
+                    ${imageUrl
+                        ? `<img class="u-max-full-width" width="320" height="180" src="${escapeHtml(imageUrl)}" alt="Affiche de ${escapeHtml(spectacle.titre)}" loading="lazy">`
+                        : '<p>Image non renseignée.</p>'}
+                </div>
+                <div class="nine columns">
+                    <p>${escapeHtml(spectacle.genre)}</p>
+                    <h2>${escapeHtml(spectacle.titre)}</h2>
+                    <p>${artists || 'Artiste à annoncer'}</p>
+                    <p>${escapeHtml(formatDate(spectacle.date))} · ${escapeHtml(spectacle.horaire)}</p>
+                    <span class="button button-primary">Voir la soirée</span>
+                </div>
+            </article>
+        </a>`;
 };
 
 const renderSoiree = (soiree) => {
@@ -97,12 +97,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     spectacleList.addEventListener('click', async (event) => {
-        const button = event.target.closest('[data-soiree-id]');
-        if (!button) return;
+        const card = event.target.closest('[data-soiree-id]');
+        if (!card) return;
 
-        button.disabled = true;
+        event.preventDefault();
+        if (card.getAttribute('aria-busy') === 'true') return;
+
+        card.setAttribute('aria-busy', 'true');
         try {
-            const { data } = await window.NRV_API.getSoiree(button.dataset.soireeId);
+            const { data } = await window.NRV_API.getSoiree(card.dataset.soireeId);
             renderSoiree(data);
             programView.hidden = true;
             soireeView.hidden = false;
@@ -111,12 +114,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             status.hidden = false;
             status.textContent = 'Impossible de charger le détail de cette soirée.';
         } finally {
-            button.disabled = false;
+            card.removeAttribute('aria-busy');
         }
     });
 
     document.querySelector('#back-to-program').addEventListener('click', () => {
         soireeView.hidden = true;
         programView.hidden = false;
+        status.hidden = true;
     });
 });
