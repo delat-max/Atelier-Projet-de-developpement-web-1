@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NRV.net</title>
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <script src="/js/api.js" defer></script>
+    <script src="/js/main.js" defer></script>
+</head>
+<body>
+    <header class="container">
+        <div class="row">
+            <div class="six columns">
+                <a href="/" aria-label="NRV.net, accueil">NRV<span>.net</span></a>
+            </div>
+            <div class="six columns">
+                <p>Festival Nancy Rock Vibration</p>
+            </div>
+        </div>
+    </header>
+    <main class="container">
+        <section id="program-view" aria-labelledby="program-title">
+            <div class="row">
+                <div class="twelve columns">
+                    <p>La programmation</p>
+                    <h1 id="program-title">Les spectacles</h1>
+                    <p>Parcourez les scènes et les soirées du festival.</p>
+                </div>
+            </div>
+            <p id="api-status" role="status" aria-live="polite">Chargement…</p>
+            <div id="spectacle-list"></div>
+        </section>
+        <section id="soiree-view" aria-live="polite" hidden>
+            <div class="row">
+                <div class="twelve columns">
+                    <button id="back-to-program" class="button" type="button">← Toute la programmation</button>
+                </div>
+            </div>
+            <div id="soiree-content"></div>
+        </section>
+    </main>
+</body>
+</html>
