@@ -12,9 +12,9 @@ final class CatalogRepository
     {
     }
 
-    public function findAllSpectacles(): array
+    public function findAllSpectacles(?string $date = null, ?string $genre = null): array
     {
-        return $this->findSpectacles();
+        return $this->findSpectacles(null, $date,$genre);
     }
 
     public function findSoireeById(int $id): ?array
@@ -44,7 +44,7 @@ final class CatalogRepository
         return $this->findSpectacles($id);
     }
 
-    private function findSpectacles(?int $idSoiree = null): array
+    private function findSpectacles(?int $idSoiree = null, ?string $date = null, ?string $genre = null): array
     {
         $sql = 'SELECT spectacle.id_spectacle, spectacle.id_soiree, spectacle.titre,
                        spectacle.description, spectacle.genre, spectacle.image, spectacle.video,
@@ -57,17 +57,31 @@ final class CatalogRepository
                     ON spectacle_artiste.id_spectacle = spectacle.id_spectacle
                 LEFT JOIN artiste ON artiste.id_artiste = spectacle_artiste.id_artiste';
 
-        if ($idSoiree !== null) {
-            $sql .= ' WHERE spectacle.id_soiree = :id_soiree';
+        $conditions = [];$params = [];
+
+        if ($idSoiree !== null) {$conditions[] = 'spectacle.id_soiree = :id_soiree';
+            $params['id_soiree'] =$idSoiree;
+        }
+
+        if ($date !== null && $date !== '') {$conditions[] = 'soiree.`date` = :date';
+            $params['date'] =$date;
+        }
+
+        if ($genre !== null && $genre !== '') {$conditions[] = 'LOWER(TRIM(spectacle.genre)) = LOWER(TRIM(:genre))';
+            $params['genre'] =$genre;
+        }
+
+        if (!empty($conditions)) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
         $sql .= ' ORDER BY soiree.`date`, spectacle.creneau, spectacle.titre, artiste.nom';
         $statement = $this->pdo->prepare($sql);
-        $statement->execute($idSoiree === null ? [] : ['id_soiree' => $idSoiree]);
+        $statement->execute($params);
 
         $spectacles = [];
-        while ($row = $statement->fetch()) {
-            $id = (int) $row['id_spectacle'];
+        while ($row =$statement->fetch()) {
+            $id = (int)$row['id_spectacle'];
             if (!isset($spectacles[$id])) {
                 $spectacles[$id] = [
                     'id_spectacle' => $id,

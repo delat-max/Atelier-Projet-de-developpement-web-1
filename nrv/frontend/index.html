@@ -12,12 +12,18 @@
 </head>
 <body>
     <header class="container">
-        <div class="row">
+        <div class="row" style="margin-bottom: 2rem;">
             <div class="six columns">
-                <a href="/" aria-label="NRV.net, accueil">NRV<span>.net</span></a>
+                <label for="filter-date">Filtrer par date</label>
+                <select id="filter-date" class="u-full-width">
+                    <option value="">Toutes les dates</option>
+                </select>
             </div>
             <div class="six columns">
-                <p>Festival Nancy Rock Vibration</p>
+                <label for="filter-genre">Filtrer par style de musique</label>
+                <select id="filter-genre" class="u-full-width">
+                    <option value="">Tous les styles</option>
+                </select>
             </div>
         </div>
     </header>

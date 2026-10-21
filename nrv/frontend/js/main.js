@@ -85,42 +85,97 @@ document.addEventListener('DOMContentLoaded', async () => {
     const programView = document.querySelector('#program-view');
     const soireeView = document.querySelector('#soiree-view');
     const spectacleList = document.querySelector('#spectacle-list');
+    const filterDate = document.querySelector('#filter-date');
+    const filterGenre = document.querySelector('#filter-genre');
+
+    const fetchFilteredSpectacles = async () => {
+        status.hidden = false;
+        status.textContent = 'Chargement…';
+
+        const dateVal = filterDate ? filterDate.value.trim() : '';
+        const genreVal = filterGenre ? filterGenre.value.trim() : '';
+
+        try {
+            const filters = {};
+            if (dateVal !== '') filters.date = dateVal;
+            if (genreVal !== '') filters.genre = genreVal;
+
+            const { data } = await window.NRV_API.getSpectacles(filters);
+
+            status.hidden = true;
+            spectacleList.innerHTML = data.length
+                ? data.map(renderSpectacle).join('')
+                : '<p class="empty-state">Aucun spectacle ne correspond à ces critères.</p>';
+        } catch (err) {
+            console.error('Erreur API :', err);
+            status.hidden = false;
+            status.textContent = 'Erreur lors du chargement des spectacles.';
+        }
+    };
+
+    const populateFilterOptions = (shows) => {
+        if (!filterDate || !filterGenre) return;
+
+        const dates = [...new Set(shows.map((s) => s.date).filter(Boolean))].sort();
+        const genres = [...new Set(shows.map((s) => s.genre).filter(Boolean))].sort();
+
+        // Réinitialiser les listes en conservant la première option
+        filterDate.innerHTML = '<option value="">Toutes les dates</option>';
+        filterGenre.innerHTML = '<option value="">Tous les styles</option>';
+
+        dates.forEach((d) => {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.textContent = formatDate(d);
+            filterDate.appendChild(opt);
+        });
+
+        genres.forEach((g) => {
+            const opt = document.createElement('option');
+            opt.value = g;
+            opt.textContent = g;
+            filterGenre.appendChild(opt);
+        });
+    };
 
     try {
         const { data } = await window.NRV_API.getSpectacles();
         status.hidden = true;
+        populateFilterOptions(data);
         spectacleList.innerHTML = data.length
             ? data.map(renderSpectacle).join('')
             : '<p class="empty-state">Aucun spectacle n’est encore programmé.</p>';
-    } catch {
+    } catch (err) {
+        console.error('Erreur au chargement initial :', err);
+        status.hidden = false;
         status.textContent = 'La programmation est momentanément indisponible.';
     }
 
+    if (filterDate) filterDate.addEventListener('change', fetchFilteredSpectacles);
+    if (filterGenre) filterGenre.addEventListener('change', fetchFilteredSpectacles);
+
     spectacleList.addEventListener('click', async (event) => {
-        const card = event.target.closest('[data-soiree-id]');
-        if (!card) return;
+        const button = event.target.closest('[data-soiree-id]');
+        if (!button) return;
 
-        event.preventDefault();
-        if (card.getAttribute('aria-busy') === 'true') return;
-
-        card.setAttribute('aria-busy', 'true');
+        button.disabled = true;
         try {
-            const { data } = await window.NRV_API.getSoiree(card.dataset.soireeId);
+            const { data } = await window.NRV_API.getSoiree(button.dataset.soireeId);
             renderSoiree(data);
             programView.hidden = true;
             soireeView.hidden = false;
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        } catch {
+        } catch (err) {
+            console.error('Erreur soirée :', err);
             status.hidden = false;
             status.textContent = 'Impossible de charger le détail de cette soirée.';
         } finally {
-            card.removeAttribute('aria-busy');
+            button.disabled = false;
         }
     });
 
-    document.querySelector('#back-to-program').addEventListener('click', () => {
+    document.querySelector('#back-to-program')?.addEventListener('click', () => {
         soireeView.hidden = true;
         programView.hidden = false;
-        status.hidden = true;
     });
 });
