@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App;
+namespace App\adapters\persistence;
 
+use App\application\ports\spi\CatalogRepositoryInterface;
 use PDO;
 
-final class CatalogRepository
+final class MySQLCatalogRepository implements CatalogRepositoryInterface
 {
     public function __construct(private PDO $pdo)
     {
