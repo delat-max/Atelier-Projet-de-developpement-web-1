@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Profil | NRV.net</title>
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/main.js" defer></script>
+</head>
+<body>
+<header class="entete-site">
+    <div class="container contenu-entete">
+        <div class="row ligne-entete">
+            <div class="three columns colonne-logo">
+                <a class="lien-logo" href="/" aria-label="NRV.net, accueil"><span class="eclair-logo">⚡</span>NRV<span class="point-logo">.net</span></a>
+            </div>
+            <div class="five columns recherche-entete ordinateur-seulement">
+                <label class="cache-visuellement" for="site-search">Rechercher</label>
+                <input id="site-search" class="u-full-width" type="search" placeholder="Rechercher un groupe, une scène, un pass…">
+            </div>
+            <div class="two columns action-entete ordinateur-seulement">
+                <a class="button button-primary bouton-entete" href="/panier.html">Panier ↗</a>
+            </div>
+            <div class="two columns action-entete ordinateur-seulement">
+                <a class="button button-light bouton-entete" href="/profil.html">Profil</a>
+            </div>
+            <button class="bouton-menu-mobile mobile-seulement" type="button" aria-label="Ouvrir le menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+    <nav class="menu-mobile" hidden aria-label="Navigation mobile">
+        <div class="contenu-menu">
+            <div class="haut-menu">
+                <span class="fleche-menu" aria-hidden="true">»</span>
+                <a class="logo-menu" href="/" aria-label="Accueil"><span>⚡</span>NRV.net</a>
+            </div>
+            <label class="cache-visuellement" for="mobile-search">Rechercher</label>
+            <input id="mobile-search" class="u-full-width recherche-menu" type="search" placeholder="Rechercher un groupe, une scène, un pass…">
+            <a class="button button-primary bouton-menu" href="/panier.html">Panier</a>
+            <a class="button button-light bouton-menu" href="/profil.html">Profil</a>
+        </div>
+    </nav>
+</header>
+<main class="container cadre-page page-connexion">
+    <section class="carte-connexion" aria-labelledby="login-title">
+        <form>
+            <label for="profile-email">Email</label>
+            <input id="profile-email" class="u-full-width" type="email" placeholder="email">
+            <label for="profile-password">Mot de passe</label>
+            <input id="profile-password" class="u-full-width" type="password" placeholder="mot de passe">
+            <button class="button bouton-connexion" type="button">Se connecter</button>
+        </form>
+        <a href="#">Mot de passe oublié ?</a>
+    </section>
+</main>
+</body>
+</html>

@@ -1,181 +1,283 @@
-const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;',
-})[character]);
+function escapeHtml(value) {
+	return String(value ?? '').replace(/[&<>"']/g, function (character) {
+		return {
+			'&': '&amp;',
+			'<': '&lt;',
+			'>': '&gt;',
+			'"': '&quot;',
+			"'": '&#039;'
+		}[character];
+	});
+}
 
-const formatDate = (value) => {
-    const date = new Date(`${value}T00:00:00`);
-    return Number.isNaN(date.getTime())
-        ? value
-        : new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(date);
-};
+function formatDate(value) {
+	const date = new Date(value + 'T00:00:00');
 
-const safeImageUrl = (value) => {
-    if (!value) return null;
+	if (Number.isNaN(date.getTime())) {
+		return value;
+	}
 
-    try {
-        const url = new URL(value, window.location.origin);
-        return ['http:', 'https:'].includes(url.protocol) ? url.href : null;
-    } catch {
-        return null;
-    }
-};
+	return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(date);
+}
 
-const renderSpectacle = (spectacle) => {
-    const imageUrl = safeImageUrl(spectacle.image);
-    const artists = spectacle.artistes.map((artist) => escapeHtml(artist.nom)).join(', ');
+function getImageUrl(value) {
+	if (!value) {
+		return null;
+	}
 
-    return `
-        <a class="spectacle-card" href="#soiree-view" data-soiree-id="${spectacle.id_soiree}">
-            <article class="row">
-                <div class="three columns">
-                    ${imageUrl
-                        ? `<img class="u-max-full-width" width="320" height="180" src="${escapeHtml(imageUrl)}" alt="Affiche de ${escapeHtml(spectacle.titre)}" loading="lazy">`
-                        : '<p>Image non renseignée.</p>'}
-                </div>
-                <div class="nine columns">
-                    <p>${escapeHtml(spectacle.genre)}</p>
-                    <h2>${escapeHtml(spectacle.titre)}</h2>
-                    <p>${artists || 'Artiste à annoncer'}</p>
-                    <p>${escapeHtml(formatDate(spectacle.date))} · ${escapeHtml(spectacle.horaire)}</p>
-                    <span class="button button-primary">Voir la soirée</span>
-                </div>
-            </article>
-        </a>`;
-};
+	try {
+		const url = new URL(value, window.location.origin);
 
-const renderSoiree = (soiree) => {
-    const content = document.querySelector('#soiree-content');
-    const shows = soiree.spectacles.length
-        ? soiree.spectacles.map((show) => `
-            <article class="row">
-                <time class="two columns">${escapeHtml(show.horaire)}</time>
-                <div class="ten columns">
-                    <h3>${escapeHtml(show.titre)}</h3>
-                    <p>${show.artistes.map((artist) => escapeHtml(artist.nom)).join(', ') || 'Artiste à annoncer'}</p>
-                    <p>${escapeHtml(show.genre)}${show.description ? ` · ${escapeHtml(show.description)}` : ''}</p>
-                    ${show.video ? `<a href="${escapeHtml(safeImageUrl(show.video) || '#')}" target="_blank" rel="noreferrer">Voir des vidéos</a>` : ''}
-                </div>
-            </article>`).join('')
-        : '<p class="empty-state">Aucun spectacle n’est encore renseigné pour cette soirée.</p>';
+		if (url.protocol === 'http:' || url.protocol === 'https:') {
+			return url.href;
+		}
+	} catch {
+		return null;
+	}
 
-    content.innerHTML = `
-        <div class="row">
-            <div class="twelve columns">
-                <p>Détail de la soirée</p>
-                <h1>${escapeHtml(soiree.nom)}</h1>
-                <p>${escapeHtml(soiree.thematique || 'Programmation du festival')}</p>
-            </div>
-        </div>
-        <div class="row">
-            <div class="three columns"><p><strong>Date et début</strong><br>${escapeHtml(formatDate(soiree.date))} · ${escapeHtml(soiree.horaire_debut)}</p></div>
-            <div class="three columns"><p><strong>Lieu</strong><br>${escapeHtml(soiree.lieu)}</p></div>
-            <div class="three columns"><p><strong>Places restantes</strong><br>${escapeHtml(soiree.places_disponibles)}</p></div>
-            <div class="three columns"><p><strong>Tarif indiqué</strong><br>${escapeHtml(Number(soiree.prix).toFixed(2))} €</p></div>
-        </div>
-        <div class="row"><div class="twelve columns"><h2>Au programme</h2></div></div>
-        ${shows}`;
-};
+	return null;
+}
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const status = document.querySelector('#api-status');
-    const programView = document.querySelector('#program-view');
-    const soireeView = document.querySelector('#soiree-view');
-    const spectacleList = document.querySelector('#spectacle-list');
-    const filterDate = document.querySelector('#filter-date');
-    const filterGenre = document.querySelector('#filter-genre');
+function afficherCarte(spectacle) {
+	const imageUrl = getImageUrl(spectacle.image);
+	const artistes = spectacle.artistes.map(function (artist) {
+		return escapeHtml(artist.nom);
+	}).join(', ');
 
-    const fetchFilteredSpectacles = async () => {
-        status.hidden = false;
-        status.textContent = 'Chargement…';
+	return `
+		<article class="four columns carte-spectacle">
+			<div class="marque-carte-spectacle">
+				<span>NRV<br>LIVE</span>
+				<span class="eclair-logo" aria-hidden="true">&#9889;</span>
+			</div>
+			<div class="image-carte-spectacle">
+				${imageUrl
+					? `<img class="u-max-full-width image-spectacle" width="320" height="180" src="${escapeHtml(imageUrl)}" alt="Affiche de ${escapeHtml(spectacle.titre)}" loading="lazy">`
+					: '<div class="image-spectacle-absente" aria-hidden="true">NRV</div>'}
+			</div>
+			<div class="contenu-carte-spectacle">
+				<p class="surtitre">${escapeHtml(spectacle.genre)}</p>
+				<h2 class="titre-spectacle">${escapeHtml(spectacle.titre)}</h2>
+				<p class="artistes-spectacle">${artistes || 'Artiste à annoncer'}</p>
+				<p class="date-spectacle">${escapeHtml(formatDate(spectacle.date))} · ${escapeHtml(spectacle.horaire)}</p>
+				<button class="button button-primary" type="button" data-soiree-id="${spectacle.id_soiree}">
+					Voir la soirée
+				</button>
+			</div>
+		</article>`;
+}
 
-        const dateVal = filterDate ? filterDate.value.trim() : '';
-        const genreVal = filterGenre ? filterGenre.value.trim() : '';
+function afficherListe(spectacles) {
+	let html = '';
 
-        try {
-            const filters = {};
-            if (dateVal !== '') filters.date = dateVal;
-            if (genreVal !== '') filters.genre = genreVal;
+	for (let i = 0; i < spectacles.length; i += 3) {
+		html += '<div class="row">';
+		html += spectacles.slice(i, i + 3).map(afficherCarte).join('');
+		html += '</div>';
+	}
 
-            const { data } = await window.NRV_API.getSpectacles(filters);
+	return html;
+}
 
-            status.hidden = true;
-            spectacleList.innerHTML = data.length
-                ? data.map(renderSpectacle).join('')
-                : '<p class="empty-state">Aucun spectacle ne correspond à ces critères.</p>';
-        } catch (err) {
-            console.error('Erreur API :', err);
-            status.hidden = false;
-            status.textContent = 'Erreur lors du chargement des spectacles.';
-        }
-    };
+function afficherDetail(soiree) {
+	const content = document.querySelector('#soiree-content');
+	const shows = soiree.spectacles.length
+		? soiree.spectacles.map(function (show) {
+			return `
+				<article class="row ligne-spectacle">
+					<time class="two columns horaire-spectacle">${escapeHtml(show.horaire)}</time>
+					<div class="ten columns description-spectacle">
+						<h3>${escapeHtml(show.titre)}</h3>
+						<p>${show.artistes.map(function (artist) {
+							return escapeHtml(artist.nom);
+						}).join(', ') || 'Artiste à annoncer'}</p>
+						<p>${escapeHtml(show.genre)}${show.description ? ` · ${escapeHtml(show.description)}` : ''}</p>
+						${show.video ? `<a href="${escapeHtml(getImageUrl(show.video) || '#')}" target="_blank" rel="noreferrer">Voir des vidéos</a>` : ''}
+					</div>
+				</article>`;
+		}).join('')
+		: '<p class="message-vide">Aucun spectacle n’est encore renseigné pour cette soirée.</p>';
 
-    const populateFilterOptions = (shows) => {
-        if (!filterDate || !filterGenre) return;
+	content.innerHTML = `
+		<div class="row entete-soiree">
+			<div class="twelve columns">
+				<p class="surtitre">Détail de la soirée</p>
+				<h1>${escapeHtml(soiree.nom)}</h1>
+				<p>${escapeHtml(soiree.thematique || 'Programmation du festival')}</p>
+			</div>
+		</div>
+		<div class="row infos-soiree">
+			<div class="three columns"><p><strong>Date et début</strong><br>${escapeHtml(formatDate(soiree.date))} · ${escapeHtml(soiree.horaire_debut)}</p></div>
+			<div class="three columns"><p><strong>Lieu</strong><br>${escapeHtml(soiree.lieu)}</p></div>
+			<div class="three columns"><p><strong>Places restantes</strong><br>${escapeHtml(soiree.places_disponibles)}</p></div>
+			<div class="three columns"><p><strong>Tarif indiqué</strong><br>${escapeHtml(Number(soiree.prix).toFixed(2))} €</p></div>
+		</div>
+		<div class="row"><div class="twelve columns"><h2 class="titre-spectacles">Au programme</h2></div></div>
+		${shows}
+		<div class="row banniere-action-soiree">
+			<div class="twelve columns">
+				<div class="contenu-banniere">
+					<div>
+						<strong>Prêt à vivre le concert ?</strong>
+						<p class="texte-discret">${escapeHtml(soiree.places_disponibles)} places restantes · ${escapeHtml(Number(soiree.prix).toFixed(2))} € · ${escapeHtml(soiree.lieu)}</p>
+					</div>
+					<button class="button button-primary" type="button">Billetterie</button>
+				</div>
+			</div>
+		</div>`;
+}
 
-        const dates = [...new Set(shows.map((s) => s.date).filter(Boolean))].sort();
-        const genres = [...new Set(shows.map((s) => s.genre).filter(Boolean))].sort();
+function remplirFiltres(spectacles) {
+	const filtreDate = document.querySelector('#filtre-date');
+	const filtreGenre = document.querySelector('#filtre-genre');
 
-        // Réinitialiser les listes en conservant la première option
-        filterDate.innerHTML = '<option value="">Toutes les dates</option>';
-        filterGenre.innerHTML = '<option value="">Tous les styles</option>';
+	if (!filtreDate || !filtreGenre) {
+		return;
+	}
 
-        dates.forEach((d) => {
-            const opt = document.createElement('option');
-            opt.value = d;
-            opt.textContent = formatDate(d);
-            filterDate.appendChild(opt);
-        });
+	const dates = [...new Set(spectacles.map((spectacle) => spectacle.date).filter(Boolean))].sort();
+	const genres = [...new Set(spectacles.map((spectacle) => spectacle.genre).filter(Boolean))]
+		.sort((a, b) => a.localeCompare(b, 'fr'));
 
-        genres.forEach((g) => {
-            const opt = document.createElement('option');
-            opt.value = g;
-            opt.textContent = g;
-            filterGenre.appendChild(opt);
-        });
-    };
+	dates.forEach((date) => {
+		const option = document.createElement('option');
+		option.value = date;
+		option.textContent = formatDate(date);
+		filtreDate.appendChild(option);
+	});
 
-    try {
-        const { data } = await window.NRV_API.getSpectacles();
-        status.hidden = true;
-        populateFilterOptions(data);
-        spectacleList.innerHTML = data.length
-            ? data.map(renderSpectacle).join('')
-            : '<p class="empty-state">Aucun spectacle n’est encore programmé.</p>';
-    } catch (err) {
-        console.error('Erreur au chargement initial :', err);
-        status.hidden = false;
-        status.textContent = 'La programmation est momentanément indisponible.';
-    }
+	genres.forEach((genre) => {
+		const option = document.createElement('option');
+		option.value = genre;
+		option.textContent = genre;
+		filtreGenre.appendChild(option);
+	});
+}
 
-    if (filterDate) filterDate.addEventListener('change', fetchFilteredSpectacles);
-    if (filterGenre) filterGenre.addEventListener('change', fetchFilteredSpectacles);
+document.addEventListener('DOMContentLoaded', async function () {
+	const menuToggle = document.querySelector('.bouton-menu-mobile');
+	const mobileDrawer = document.querySelector('.menu-mobile');
 
-    spectacleList.addEventListener('click', async (event) => {
-        const button = event.target.closest('[data-soiree-id]');
-        if (!button) return;
+	if (menuToggle && mobileDrawer) {
+		menuToggle.addEventListener('click', function () {
+			const ouvert = menuToggle.getAttribute('aria-expanded') === 'true';
+			menuToggle.setAttribute('aria-expanded', String(!ouvert));
+			mobileDrawer.hidden = ouvert;
+		});
+	}
 
-        button.disabled = true;
-        try {
-            const { data } = await window.NRV_API.getSoiree(button.dataset.soireeId);
-            renderSoiree(data);
-            programView.hidden = true;
-            soireeView.hidden = false;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        } catch (err) {
-            console.error('Erreur soirée :', err);
-            status.hidden = false;
-            status.textContent = 'Impossible de charger le détail de cette soirée.';
-        } finally {
-            button.disabled = false;
-        }
-    });
+	let status = document.querySelector('#etat-api');
+	const programView = document.querySelector('#vue-programme');
+	const soireeView = document.querySelector('#vue-soiree');
+	const spectacleList = document.querySelector('#spectacle-list');
+	const filtreDate = document.querySelector('#filtre-date');
+	const filtreGenre = document.querySelector('#filtre-genre');
+	const triProgramme = document.querySelector('#tri-programme');
 
-    document.querySelector('#back-to-program')?.addEventListener('click', () => {
-        soireeView.hidden = true;
-        programView.hidden = false;
-    });
+	if (spectacleList && !status) {
+		status = document.createElement('p');
+		status.id = 'etat-api';
+		status.className = 'etat-api';
+		status.setAttribute('role', 'status');
+		status.setAttribute('aria-live', 'polite');
+		spectacleList.before(status);
+	}
+
+	if (spectacleList) {
+		let spectaclesActuels = [];
+
+
+		const afficherResultats = function (spectacles) {
+			spectaclesActuels = spectacles;
+			if (status) {
+				status.hidden = true;
+			}
+			spectacleList.innerHTML = spectacles.length
+				? afficherListe(spectacles)
+				: '<p class="message-vide">Aucun spectacle ne correspond à ces filtres.</p>';
+		};
+
+		const chargerSpectaclesFiltres = async function () {
+			if (status) {
+				status.hidden = false;
+				status.textContent = 'Chargement…';
+			}
+
+			try {
+				const result = await window.NRV_API.getSpectacles({
+					date: filtreDate ? filtreDate.value : '',
+					genre: filtreGenre ? filtreGenre.value : '',
+					tri: triProgramme ? triProgramme.value : 'date-croissante'
+				});
+				afficherResultats(result.data);
+			} catch {
+				if (status) {
+					status.hidden = false;
+					status.textContent = 'Impossible de charger les spectacles filtrés.';
+				}
+			}
+		};
+
+		try {
+			const result = await window.NRV_API.getSpectacles();
+			remplirFiltres(result.data);
+			afficherResultats(result.data);
+		} catch {
+			if (status) {
+				status.textContent = 'La programmation est momentanément indisponible.';
+			}
+		}
+
+		if (filtreDate) {
+			filtreDate.addEventListener('change', chargerSpectaclesFiltres);
+		}
+		if (filtreGenre) {
+			filtreGenre.addEventListener('change', chargerSpectaclesFiltres);
+		}
+		if (triProgramme) {
+			triProgramme.addEventListener('change', chargerSpectaclesFiltres);
+		}
+
+		spectacleList.addEventListener('click', async function (event) {
+			const button = event.target.closest('[data-soiree-id]');
+
+			if (!button) {
+				return;
+			}
+
+			button.disabled = true;
+
+			try {
+				const result = await window.NRV_API.getSoiree(button.dataset.soireeId);
+				afficherDetail(result.data);
+				if (programView) {
+					programView.hidden = true;
+				}
+				if (soireeView) {
+					soireeView.hidden = false;
+				}
+				window.scrollTo({ top: 0, behavior: 'smooth' });
+			} catch {
+				if (status) {
+					status.hidden = false;
+					status.textContent = 'Impossible de charger le détail de cette soirée.';
+				}
+			} finally {
+				button.disabled = false;
+			}
+		});
+	}
+
+	const backButton = document.querySelector('#back-to-program');
+
+	if (backButton) {
+		backButton.addEventListener('click', function () {
+			if (soireeView) {
+				soireeView.hidden = true;
+			}
+			if (programView) {
+				programView.hidden = false;
+			}
+		});
+	}
 });

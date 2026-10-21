@@ -12,9 +12,9 @@ final class CatalogRepository
     {
     }
 
-    public function findAllSpectacles(?string $date = null, ?string $genre = null): array
+    public function findAllSpectacles(?string $date = null, ?string $genre = null, ?string $tri = null): array
     {
-        return $this->findSpectacles(null, $date,$genre);
+        return $this->findSpectacles(null, $date, $genre, $tri);
     }
 
     public function findSoireeById(int $id): ?array
@@ -44,7 +44,7 @@ final class CatalogRepository
         return $this->findSpectacles($id);
     }
 
-    private function findSpectacles(?int $idSoiree = null, ?string $date = null, ?string $genre = null): array
+    private function findSpectacles(?int $idSoiree = null, ?string $date = null, ?string $genre = null, ?string $tri = null): array
     {
         $sql = 'SELECT spectacle.id_spectacle, spectacle.id_soiree, spectacle.titre,
                        spectacle.description, spectacle.genre, spectacle.image, spectacle.video,
@@ -57,31 +57,40 @@ final class CatalogRepository
                     ON spectacle_artiste.id_spectacle = spectacle.id_spectacle
                 LEFT JOIN artiste ON artiste.id_artiste = spectacle_artiste.id_artiste';
 
-        $conditions = [];$params = [];
+        $conditions = [];
+        $parameters = [];
 
-        if ($idSoiree !== null) {$conditions[] = 'spectacle.id_soiree = :id_soiree';
-            $params['id_soiree'] =$idSoiree;
+        if ($idSoiree !== null) {
+            $conditions[] = 'spectacle.id_soiree = :id_soiree';
+            $parameters['id_soiree'] = $idSoiree;
         }
 
-        if ($date !== null && $date !== '') {$conditions[] = 'soiree.`date` = :date';
-            $params['date'] =$date;
+        if ($date !== null && $date !== '') {
+            $conditions[] = 'soiree.`date` = :date';
+            $parameters['date'] = $date;
         }
 
-        if ($genre !== null && $genre !== '') {$conditions[] = 'LOWER(TRIM(spectacle.genre)) = LOWER(TRIM(:genre))';
-            $params['genre'] =$genre;
+        if ($genre !== null && $genre !== '') {
+            $conditions[] = 'LOWER(TRIM(spectacle.genre)) = LOWER(TRIM(:genre))';
+            $parameters['genre'] = $genre;
         }
 
-        if (!empty($conditions)) {
+        if ($conditions !== []) {
             $sql .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
-        $sql .= ' ORDER BY soiree.`date`, spectacle.creneau, spectacle.titre, artiste.nom';
+        $ordre = match ($tri) {
+            'date-decroissante' => 'soiree.`date` DESC, spectacle.creneau DESC, spectacle.titre, artiste.nom',
+            'titre' => 'spectacle.titre, soiree.`date`, spectacle.creneau, artiste.nom',
+            default => 'soiree.`date`, spectacle.creneau, spectacle.titre, artiste.nom',
+        };
+        $sql .= ' ORDER BY ' . $ordre;
         $statement = $this->pdo->prepare($sql);
-        $statement->execute($params);
+        $statement->execute($parameters);
 
         $spectacles = [];
-        while ($row =$statement->fetch()) {
-            $id = (int)$row['id_spectacle'];
+        while ($row = $statement->fetch()) {
+            $id = (int) $row['id_spectacle'];
             if (!isset($spectacles[$id])) {
                 $spectacles[$id] = [
                     'id_spectacle' => $id,

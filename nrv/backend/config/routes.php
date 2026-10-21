@@ -24,13 +24,12 @@ return static function (App $app, CatalogRepository $catalog): void {
         ServerRequestInterface $request,
         ResponseInterface $response
     ) use ($catalog, $json): ResponseInterface {
-        $params = $request->getQueryParams();
-        $date = isset($params['date']) && is_string($params['date']) ? trim($params['date']) : null;
-        $genre = isset($params['genre']) && is_string($params['genre']) ? trim($params['genre']) : null;
+        $query = $request->getQueryParams();
+        $date = isset($query['date']) && is_string($query['date']) ? trim($query['date']) : null;
+        $genre = isset($query['genre']) && is_string($query['genre']) ? trim($query['genre']) : null;
+        $tri = isset($query['tri']) && is_string($query['tri']) ? trim($query['tri']) : null;
 
-        return $json($response, [
-            'data' => $catalog->findAllSpectacles($date, $genre),
-        ]);
+        return $json($response, ['data' => $catalog->findAllSpectacles($date ?: null, $genre ?: null, $tri)]);
     });
 
     $app->get('/api/soirees/{id}', static function (

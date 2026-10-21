@@ -15,13 +15,12 @@ window.NRV_API = {
 
     getSpectacles(filters = {}) {
         const params = new URLSearchParams();
-        if (filters.date) params.append('date', filters.date);
-        if (filters.genre) params.append('genre', filters.genre);
+        if (filters.date) params.set('date', filters.date);
+        if (filters.genre) params.set('genre', filters.genre);
+        if (filters.tri) params.set('tri', filters.tri);
 
-        const queryString = params.toString();
-        const url = queryString ? `/api/spectacles?${queryString}` : '/api/spectacles';
-
-        return this.request(url);
+        const query = params.toString();
+        return this.request(query ? `/api/spectacles?${query}` : '/api/spectacles');
     },
 
     getSoiree(id) {

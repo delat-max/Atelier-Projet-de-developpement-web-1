@@ -6,47 +6,109 @@
     <title>NRV.net</title>
     <link rel="stylesheet" href="/css/normalize.css">
     <link rel="stylesheet" href="/css/skeleton.css">
-    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/style.css">
     <script src="/js/api.js" defer></script>
     <script src="/js/main.js" defer></script>
 </head>
 <body>
-    <header class="container">
-        <div class="row" style="margin-bottom: 2rem;">
-            <div class="six columns">
-                <label for="filter-date">Filtrer par date</label>
-                <select id="filter-date" class="u-full-width">
+<header class="entete-site">
+    <div class="container contenu-entete">
+        <div class="row ligne-entete">
+            <div class="three columns colonne-logo">
+                <a class="lien-logo" href="/" aria-label="NRV.net, accueil"><span class="eclair-logo">⚡</span>NRV<span class="point-logo">.net</span></a>
+            </div>
+            <div class="five columns recherche-entete ordinateur-seulement">
+                <label class="cache-visuellement" for="site-search">Rechercher</label>
+                <input id="site-search" class="u-full-width" type="search" placeholder="Rechercher un groupe, une scène, un pass…">
+            </div>
+            <div class="two columns action-entete ordinateur-seulement">
+                <a class="button button-primary bouton-entete" href="/panier.html">Panier ↗</a>
+            </div>
+            <div class="two columns action-entete ordinateur-seulement">
+                <a class="button button-light bouton-entete" href="/profil.html">Profil</a>
+            </div>
+            <button class="bouton-menu-mobile mobile-seulement" type="button" aria-label="Ouvrir le menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+    <nav class="menu-mobile" hidden aria-label="Navigation mobile">
+        <div class="contenu-menu">
+            <div class="haut-menu">
+                <span class="fleche-menu" aria-hidden="true">»</span>
+                <a class="logo-menu" href="/" aria-label="Accueil"><span>⚡</span>NRV.net</a>
+            </div>
+            <label class="cache-visuellement" for="mobile-search">Rechercher</label>
+            <input id="mobile-search" class="u-full-width recherche-menu" type="search" placeholder="Rechercher un groupe, une scène, un pass…">
+            <a class="button button-primary bouton-menu" href="/panier.html">Panier</a>
+            <a class="button button-light bouton-menu" href="/profil.html">Profil</a>
+        </div>
+    </nav>
+</header>
+<main class="container cadre-page">
+    <section id="vue-programme" class="vue-programme" aria-labelledby="program-title">
+        <div class="banniere row">
+            <div class="six columns texte-banniere">
+                <p class="surtitre">Nancy · Festival rock · Démonstration</p>
+                <h1 id="program-title">Le live.<br>Sans filtre.</h1>
+                <p class="description-banniere">Des guitares franches. Une ville qui résonne.<br>L’énergie du rock, réunie sous une même bannière.</p>
+                <p class="date-banniere">Dates et programmation à annoncer.</p>
+                <a class="button button-light bouton-banniere" href="#spectacle-list">Programme ↗</a>
+            </div>
+            <div class="six columns visuel-banniere">
+                <img src="/assets/nrv-hero.jpg" alt="Guitariste sur scène dans une lumière rouge" class="image-banniere">
+            </div>
+        </div>
+
+        <div class="titre-programme">
+            <p class="surtitre">L’énergie se partage</p>
+            <h2>Dans les amplis.</h2>
+        </div>
+
+        <div class="row filtres-programme">
+            <div class="four columns">
+                <label for="filtre-date">Filtrer par date</label>
+                <select id="filtre-date" class="u-full-width">
                     <option value="">Toutes les dates</option>
                 </select>
             </div>
-            <div class="six columns">
-                <label for="filter-genre">Filtrer par style de musique</label>
-                <select id="filter-genre" class="u-full-width">
+            <div class="four columns">
+                <label for="filtre-genre">Filtrer par style</label>
+                <select id="filtre-genre" class="u-full-width">
                     <option value="">Tous les styles</option>
                 </select>
             </div>
+            <div class="four columns">
+                <label for="tri-programme">Trier par</label>
+                <select id="tri-programme" class="u-full-width">
+                    <option value="date-croissante">Date, de la plus ancienne</option>
+                    <option value="date-decroissante">Date, de la plus récente</option>
+                    <option value="titre">Nom, A à Z</option>
+                </select>
+            </div>
         </div>
-    </header>
-    <main class="container">
-        <section id="program-view" aria-labelledby="program-title">
-            <div class="row">
-                <div class="twelve columns">
-                    <p>La programmation</p>
-                    <h1 id="program-title">Les spectacles</h1>
-                    <p>Parcourez les scènes et les soirées du festival.</p>
-                </div>
+
+        <p id="etat-api" class="etat-api" role="status" aria-live="polite">Chargement…</p>
+        <div id="spectacle-list" class="grille-spectacles"></div>
+        <article class="carte-pass" aria-label="Pass découverte">
+            <div class="texte-pass">
+                <p class="surtitre">Pass découverte</p>
+                <h3>Une dose<br>de live.</h3>
+                <p>Une entrée · Un concentré d’énergie.</p>
+                <p>Tarif à annoncer.</p>
+                <a class="button button-light" href="#">Découvrir le pass</a>
             </div>
-            <p id="api-status" role="status" aria-live="polite">Chargement…</p>
-            <div id="spectacle-list"></div>
-        </section>
-        <section id="soiree-view" aria-live="polite" hidden>
-            <div class="row">
-                <div class="twelve columns">
-                    <button id="back-to-program" class="button" type="button">← Toute la programmation</button>
-                </div>
+        </article>
+    </section>
+
+    <section id="vue-soiree" class="vue-soiree" aria-live="polite" hidden>
+        <div class="row">
+            <div class="twelve columns">
+                <button id="back-to-program" class="button button-outline bouton-retour" type="button">← Toute la programmation</button>
             </div>
-            <div id="soiree-content"></div>
-        </section>
-    </main>
+        </div>
+        <div id="soiree-content"></div>
+    </section>
+</main>
 </body>
 </html>
