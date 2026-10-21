@@ -1,0 +1,51 @@
+@startuml 06_activite_achat
+' NRV.net : diagramme d'activité du parcours d'achat
+skinparam dpi 150
+skinparam shadowing false
+
+|Utilisateur|
+start
+:Consulter le détail d'une soirée;
+if (Connecté ?) then (non)
+  :Se connecter ou s'inscrire;
+else (oui)
+endif
+:Choisir la catégorie de tarif\n(normal ou réduit) et la quantité;
+:Ajouter au panier;
+if (Acheter pour d'autres soirées ?) then (oui)
+  :Consulter une autre soirée;
+  note right: Pass 3 jours possible :\n3 soirées, remise de 3 %
+  :Ajouter au panier;
+else (non)
+endif
+:Consulter le panier;
+
+|Application|
+:Calculer le montant total;
+
+|Utilisateur|
+:Valider le panier;
+
+|Application|
+:Créer la commande\n(statut "en attente");
+
+|Utilisateur|
+:Saisir les données de carte bancaire;
+
+|Application|
+:Vérifier les places disponibles;
+if (Places suffisantes ?) then (oui)
+  :Mettre à jour les places disponibles;
+  :Passer la commande en "payée";
+  :Créer les billets\n(référence + token aléatoire);
+  :Afficher les liens\nvers les billets;
+else (non)
+  :Refuser le paiement;
+  :Afficher le message\n"places insuffisantes";
+  stop
+endif
+
+|Utilisateur|
+:Consulter et imprimer ses billets;
+stop
+@enduml

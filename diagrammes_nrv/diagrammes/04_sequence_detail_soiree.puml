@@ -1,0 +1,32 @@
+@startuml 04_sequence_detail_soiree
+' NRV.net : consulter le détail d'une soirée depuis la liste (fonctionnalités 2, 3)
+skinparam dpi 150
+skinparam shadowing false
+autonumber
+
+actor "Visiteur" as V
+participant "Front\n(HTML/CSS/JS)" as F
+participant "API REST\n(PHP / Slim)" as A
+database "Base de\ndonnées" as DB
+
+V -> F : Clique sur un spectacle de la liste
+F -> F : Récupère l'id_soiree du spectacle
+F -> A : GET /soirees/{id}
+A -> DB : SELECT soirée + lieu
+DB --> A : Soirée
+alt Soirée trouvée
+  A -> DB : SELECT tarifs
+  DB --> A : Tarifs (normal, réduit)
+  A -> DB : SELECT spectacles de la soirée\n+ style + images
+  DB --> A : Spectacles
+  A -> DB : SELECT artistes\n(via SPECTACLE_ARTISTE)
+  DB --> A : Artistes
+  A -> A : Assemble la réponse JSON
+  A --> F : 200 OK (soirée, lieu, tarifs, spectacles)
+  F -> F : Génère la page (template)
+  F --> V : Détail : nom, thématique, date, horaire,\nlieu, tarifs, spectacles (titre, artistes,\ndescription, style, vidéo)
+else Soirée inexistante
+  A --> F : 404 Not Found
+  F --> V : Message d'erreur
+end
+@enduml

@@ -1,0 +1,45 @@
+@startuml 03_sequence_liste_filtres
+' NRV.net : afficher et filtrer la liste des spectacles (fonctionnalités 1, 4, 5)
+skinparam dpi 150
+skinparam shadowing false
+autonumber
+
+actor "Visiteur" as V
+participant "Front\n(HTML/CSS/JS)" as F
+participant "API REST\n(PHP / Slim)" as A
+database "Base de\ndonnées" as DB
+
+V -> F : Ouvre la page d'accueil
+F -> A : GET /spectacles
+A -> DB : SELECT spectacles\n+ date de la soirée + image
+DB --> A : Lignes
+A --> F : 200 OK (JSON : liste des spectacles)
+F -> F : Génère les cartes\n(template Handlebars)
+F --> V : Liste : titre, date, horaire, image
+
+== Filtre par style ==
+V -> F : Choisit un style (ex : blues rock)
+F -> A : GET /spectacles?style={id_style}
+A -> DB : SELECT ... WHERE id_style = ?
+DB --> A : Lignes
+A --> F : 200 OK (JSON filtré)
+F --> V : Liste mise à jour sans rechargement
+
+== Filtre par date ==
+V -> F : Choisit une date
+F -> A : GET /spectacles?style={id_style}&date={date}
+A -> DB : SELECT ... WHERE id_style = ?\nAND soiree.date = ?
+DB --> A : Lignes
+alt Au moins un spectacle
+  A --> F : 200 OK (JSON filtré)
+  F --> V : Liste mise à jour
+else Aucun spectacle
+  A --> F : 200 OK (liste vide)
+  F --> V : Message "Aucun spectacle ne correspond"
+end
+
+note over F, A
+  Variante possible : charger la liste une seule fois
+  et filtrer côté JS. Choix à faire par le groupe.
+end note
+@enduml

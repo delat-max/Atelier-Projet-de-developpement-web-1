@@ -1,0 +1,66 @@
+@startuml 01_cas_utilisation
+' NRV.net : diagramme de cas d'utilisation
+skinparam dpi 150
+skinparam shadowing false
+left to right direction
+
+actor "Visiteur" as V
+actor "Utilisateur inscrit" as U
+actor "Organisateur\n(backoffice)" as O
+V <|-- U
+
+rectangle "NRV.net" {
+  package "Programme du festival" {
+    usecase "Consulter la liste\ndes spectacles" as UC1
+    usecase "Filtrer par date" as UC4
+    usecase "Filtrer par style\nde musique" as UC5
+    usecase "Consulter le détail\nd'une soirée" as UC2
+    usecase "Paginer la liste" as UCE1
+  }
+
+  package "Compte" {
+    usecase "S'inscrire" as UCI
+    usecase "Se connecter" as UCC
+  }
+
+  package "Achat de billets" {
+    usecase "Ajouter des billets\nau panier" as UC6
+    usecase "Consulter le panier\net son montant" as UC7
+    usecase "Modifier le nombre\nde billets" as UCE2
+    usecase "Valider le panier\n(créer la commande)" as UC8
+    usecase "Payer la commande" as UC9
+    usecase "Vérifier les places\ndisponibles" as UCV
+    usecase "Obtenir et imprimer\nses billets" as UC10
+  }
+
+  package "Backoffice" {
+    usecase "Consulter la jauge\net la recette des soirées" as UC11
+    usecase "Ajouter des soirées\net des spectacles" as UCE3
+  }
+}
+
+V --> UC1
+V --> UC2
+V --> UCI
+UC1 <.. UC4 : <<extend>>
+UC1 <.. UC5 : <<extend>>
+UC1 <.. UCE1 : <<extend>>
+
+U --> UCC
+U --> UC6
+U --> UC7
+U --> UC8
+U --> UC9
+U --> UC10
+UC7 <.. UCE2 : <<extend>>
+UC9 ..> UCV : <<include>>
+
+O --> UC11
+O --> UCE3
+
+note right of UCE1
+  Les cas en fonctionnalités étendues :
+  pagination, modification du panier,
+  ajout de soirées et de spectacles.
+end note
+@enduml

@@ -1,0 +1,33 @@
+@startuml 08_architecture_docker
+' NRV.net : architecture et déploiement avec Docker (proposition)
+skinparam dpi 150
+skinparam shadowing false
+
+actor "Utilisateur\n(navigateur)" as U
+
+node "Docker Compose" {
+  node "front\n(Apache ou Nginx)" as FRONT {
+    artifact "HTML / CSS / JS\n+ templates Handlebars" as STATIC
+  }
+  node "api\n(PHP + Apache)" as API {
+    component "Slim\n(routes REST)" as SLIM
+    component "Accès aux données\n(PDO)" as PDO
+  }
+  database "db\n(MySQL / MariaDB)" as DB {
+    artifact "script de création\n+ jeu de données" as SQL
+  }
+  node "adminer\n(optionnel)" as ADM
+}
+
+U --> FRONT : HTTP (pages)
+U --> API : fetch() en JSON\nGET /spectacles, GET /soirees/{id}...
+SLIM --> PDO
+PDO --> DB : SQL
+ADM --> DB : administration
+
+note bottom of DB
+  Le script SQL et le jeu de test sont
+  chargés au premier démarrage du
+  conteneur (docker-entrypoint-initdb.d).
+end note
+@enduml

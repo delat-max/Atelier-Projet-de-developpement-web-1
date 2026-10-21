@@ -1,0 +1,28 @@
+@startuml 07_etats_commande
+' NRV.net : diagramme d'états d'une commande
+skinparam dpi 150
+skinparam shadowing false
+hide empty description
+
+[*] --> Panier : ajout d'un premier billet
+
+state Panier : lignes modifiables
+state "En attente de paiement" as Attente : commande créée,\nmontant figé
+state "Payée" as Payee : places décomptées,\nbillets créés
+state "Annulée" as Annulee
+
+Panier --> Panier : ajout / modification\nde lignes
+Panier --> Attente : validation du panier
+Attente --> Payee : paiement accepté\n[places suffisantes]
+Attente --> Annulee : paiement refusé\n[places insuffisantes]
+Attente --> Annulee : abandon
+Payee --> [*]
+Annulee --> [*]
+
+note right of Payee
+  Le champ statut de COMMANDE prend
+  les valeurs : en attente, payée, annulée.
+  Le panier, lui, est stocké à part
+  (PANIER et LIGNE_PANIER).
+end note
+@enduml

@@ -1,0 +1,61 @@
+@startuml 05_sequence_achat_paiement
+' NRV.net : panier, commande, paiement et billets (fonctionnalités 6 à 10)
+' Les routes de l'API sont des propositions, à valider par le groupe.
+skinparam dpi 150
+skinparam shadowing false
+autonumber
+
+actor "Utilisateur\nconnecté" as U
+participant "Front\n(HTML/CSS/JS)" as F
+participant "API REST\n(PHP / Slim)" as A
+database "Base de\ndonnées" as DB
+
+== Ajout au panier (6) ==
+U -> F : Choisit une catégorie de tarif\net une quantité sur la page soirée
+F -> A : POST /panier/lignes\n{id_soiree, id_tarif, quantite}
+A -> DB : INSERT LIGNE_PANIER
+A --> F : 201 Created
+F --> U : Confirmation d'ajout
+
+== Consultation du panier (7) ==
+U -> F : Ouvre le panier
+F -> A : GET /panier
+A -> DB : SELECT lignes + soirées + tarifs
+A -> A : Calcule le montant total
+A --> F : 200 OK (lignes, montant total)
+F --> U : Contenu du panier et total
+
+== Validation du panier (8) ==
+U -> F : Valide le panier
+F -> A : POST /commandes
+A -> DB : INSERT COMMANDE (statut = "en attente")
+A -> DB : Vide le panier
+A --> F : 201 Created (id_commande, montant)
+F --> U : Récapitulatif et formulaire de paiement
+
+== Paiement (9) ==
+U -> F : Saisit n° de carte, date d'expiration, code
+F -> A : POST /commandes/{id}/paiement
+A -> A : Contrôle le format de la carte\n(paiement simulé, rien n'est stocké)
+A -> DB : BEGIN TRANSACTION
+A -> DB : Vérifie places_disponibles\npour chaque soirée
+alt Places suffisantes
+  A -> DB : UPDATE SOIREE\nplaces_disponibles - quantité
+  A -> DB : UPDATE COMMANDE\nstatut = "payée"
+  A -> DB : INSERT BILLET\n(référence, token aléatoire, prix payé)
+  A -> DB : COMMIT
+  A --> F : 200 OK (liste des billets)
+  F --> U : Paiement accepté, liens vers les billets
+else Plus assez de places
+  A -> DB : ROLLBACK
+  A --> F : 409 Conflict
+  F --> U : Message : places insuffisantes
+end
+
+== Billet (10) ==
+U -> F : Ouvre le lien du billet
+F -> A : GET /billets/{token}
+A -> DB : SELECT billet + soirée + tarif + acheteur
+A --> F : 200 OK
+F --> U : Billet imprimable (@media print) :\nnom de l'acheteur, référence,\ndate et horaire, catégorie de tarif
+@enduml

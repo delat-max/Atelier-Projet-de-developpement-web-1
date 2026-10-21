@@ -1,0 +1,143 @@
+@startuml 02_schema_bd
+' SAE Atelier-Projet de développement web 1
+' Billetterie Nancy Rock Vibration (NRV.net) : schéma de la base de données
+
+hide circle
+skinparam dpi 150
+skinparam linetype ortho
+skinparam shadowing false
+
+entity LIEU {
+  * id_lieu : INT <<PK>>
+  --
+  * nom : VARCHAR
+  adresse : VARCHAR
+}
+
+entity SOIREE {
+  * id_soiree : INT <<PK>>
+  --
+  * nom : VARCHAR
+  thematique : VARCHAR
+  * date : DATE
+  * horaire_debut : TIME
+  * places_disponibles : INT
+  * id_lieu : INT <<FK>>
+}
+
+entity TARIF {
+  * id_tarif : INT <<PK>>
+  --
+  * categorie : VARCHAR
+  * prix : DECIMAL
+}
+
+entity STYLE_MUSIQUE {
+  * id_style : INT <<PK>>
+  --
+  * libelle : VARCHAR
+}
+
+entity SPECTACLE {
+  * id_spectacle : INT <<PK>>
+  --
+  * titre : VARCHAR
+  description : TEXT
+  horaire_previsionnel : TIME
+  url_video : VARCHAR
+  * id_soiree : INT <<FK>>
+  * id_style : INT <<FK>>
+}
+
+entity IMAGE {
+  * id_image : INT <<PK>>
+  --
+  * url : VARCHAR
+  * id_spectacle : INT <<FK>>
+}
+
+entity ARTISTE {
+  * id_artiste : INT <<PK>>
+  --
+  * nom : VARCHAR
+  informations : TEXT
+}
+
+entity SPECTACLE_ARTISTE {
+  * id_spectacle : INT <<PK, FK>>
+  * id_artiste : INT <<PK, FK>>
+}
+
+entity UTILISATEUR {
+  * id_utilisateur : INT <<PK>>
+  --
+  * nom : VARCHAR
+  * prenom : VARCHAR
+  * email : VARCHAR
+  * password : VARCHAR
+}
+
+entity PANIER {
+  * id_panier : INT <<PK>>
+  --
+  * id_utilisateur : INT <<FK>>
+}
+
+entity LIGNE_PANIER {
+  * id_ligne : INT <<PK>>
+  --
+  * id_panier : INT <<FK>>
+  * id_soiree : INT <<FK>>
+  * id_tarif : INT <<FK>>
+  * quantite : INT
+}
+
+entity COMMANDE {
+  * id_commande : INT <<PK>>
+  --
+  * id_utilisateur : INT <<FK>>
+  * montant_total : DECIMAL
+  * date : DATETIME
+  * statut : VARCHAR
+}
+
+entity PASS {
+  * id_pass : INT <<PK>>
+  --
+  * id_commande : INT <<FK>>
+  * remise : DECIMAL
+}
+
+entity BILLET {
+  * id_billet : INT <<PK>>
+  --
+  * reference : VARCHAR
+  * token : VARCHAR
+  * prix_paye : DECIMAL
+  * id_commande : INT <<FK>>
+  * id_soiree : INT <<FK>>
+  * id_tarif : INT <<FK>>
+  id_pass : INT <<FK>>
+}
+
+' Programme du festival
+LIEU ||--o{ SOIREE : accueille
+SOIREE ||--|{ SPECTACLE : contient
+STYLE_MUSIQUE ||--o{ SPECTACLE : classe
+SPECTACLE ||--|{ IMAGE : illustre
+SPECTACLE ||--|{ SPECTACLE_ARTISTE : a
+ARTISTE ||--o{ SPECTACLE_ARTISTE : joue
+
+' Achat de billets
+UTILISATEUR ||--o| PANIER : possede
+PANIER ||--o{ LIGNE_PANIER : contient
+SOIREE ||--o{ LIGNE_PANIER : concerne
+TARIF ||--o{ LIGNE_PANIER : applique
+UTILISATEUR ||--o{ COMMANDE : passe
+COMMANDE ||--|{ BILLET : genere
+COMMANDE ||--o{ PASS : inclut
+PASS |o--o{ BILLET : regroupe
+SOIREE ||--o{ BILLET : donne_acces
+TARIF ||--o{ BILLET : categorie
+
+@enduml
