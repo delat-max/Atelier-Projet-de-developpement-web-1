@@ -12,9 +12,33 @@ final class CatalogRepository
     {
     }
 
-    public function findAllSpectacles(?string $date = null, ?string $genre = null, ?string $tri = null): array
+    public function findAllSpectacles(?string $date = null, ?string $genre = null, ?string $tri = null, ?int $limit = null, ?int $offset = null): array
     {
-        return $this->findSpectacles(null, $date, $genre, $tri);
+        $spectacles = $this->findSpectacles(null, $date, $genre, $tri);
+
+        if ($limit !== null && $offset !== null) {
+            return array_slice($spectacles, $offset, $limit);
+        }
+
+        return $spectacles;
+    }
+
+    public function countAllSpectacles(?string $date = null, ?string $genre = null): int
+    {
+        $spectacles = $this->findSpectacles(null, $date, $genre);
+        return count($spectacles);
+    }
+
+    public function findAvailableDates(): array
+    {
+        $statement = $this->pdo->query('SELECT DISTINCT `date` FROM soiree WHERE `date` IS NOT NULL ORDER BY `date`');
+        return $statement->fetchAll(PDO::FETCH_COLUMN) ?: [];
+    }
+
+    public function findAvailableGenres(): array
+    {
+        $statement = $this->pdo->query('SELECT DISTINCT genre FROM spectacle WHERE genre IS NOT NULL AND TRIM(genre) != \'\' ORDER BY genre');
+        return $statement->fetchAll(PDO::FETCH_COLUMN) ?: [];
     }
 
     public function findSoireeById(int $id): ?array

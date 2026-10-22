@@ -12,37 +12,24 @@ function escapeHtml(value) {
 
 function formatDate(value) {
 	const date = new Date(value + 'T00:00:00');
-
-	if (Number.isNaN(date.getTime())) {
-		return value;
-	}
-
+	if (Number.isNaN(date.getTime())) return value;
 	return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(date);
 }
 
 function getImageUrl(value) {
-	if (!value) {
-		return null;
-	}
-
+	if (!value) return null;
 	try {
 		const url = new URL(value, window.location.origin);
-
-		if (url.protocol === 'http:' || url.protocol === 'https:') {
-			return url.href;
-		}
+		if (url.protocol === 'http:' || url.protocol === 'https:') return url.href;
 	} catch {
 		return null;
 	}
-
 	return null;
 }
 
 function afficherCarte(spectacle) {
 	const imageUrl = getImageUrl(spectacle.image);
-	const artistes = spectacle.artistes.map(function (artist) {
-		return escapeHtml(artist.nom);
-	}).join(', ');
+	const artistes = spectacle.artistes.map(artist => escapeHtml(artist.nom)).join(', ');
 
 	return `
 		<article class="four columns carte-spectacle">
@@ -69,33 +56,27 @@ function afficherCarte(spectacle) {
 
 function afficherListe(spectacles) {
 	let html = '';
-
 	for (let i = 0; i < spectacles.length; i += 3) {
 		html += '<div class="row">';
 		html += spectacles.slice(i, i + 3).map(afficherCarte).join('');
 		html += '</div>';
 	}
-
 	return html;
 }
 
 function afficherDetail(soiree) {
 	const content = document.querySelector('#soiree-content');
 	const shows = soiree.spectacles.length
-		? soiree.spectacles.map(function (show) {
-			return `
+		? soiree.spectacles.map(show => `
 				<article class="row ligne-spectacle">
 					<time class="two columns horaire-spectacle">${escapeHtml(show.horaire)}</time>
 					<div class="ten columns description-spectacle">
 						<h3>${escapeHtml(show.titre)}</h3>
-						<p>${show.artistes.map(function (artist) {
-							return escapeHtml(artist.nom);
-						}).join(', ') || 'Artiste à annoncer'}</p>
+						<p>${show.artistes.map(a => escapeHtml(a.nom)).join(', ') || 'Artiste à annoncer'}</p>
 						<p>${escapeHtml(show.genre)}${show.description ? ` · ${escapeHtml(show.description)}` : ''}</p>
 						${show.video ? `<a href="${escapeHtml(getImageUrl(show.video) || '#')}" target="_blank" rel="noreferrer">Voir des vidéos</a>` : ''}
 					</div>
-				</article>`;
-		}).join('')
+				</article>`).join('')
 		: '<p class="message-vide">Aucun spectacle n’est encore renseigné pour cette soirée.</p>';
 
 	content.innerHTML = `
@@ -127,31 +108,37 @@ function afficherDetail(soiree) {
 		</div>`;
 }
 
-function remplirFiltres(spectacles) {
-	const filtreDate = document.querySelector('#filtre-date');
-	const filtreGenre = document.querySelector('#filtre-genre');
+// Remplissage asynchrone des filtres depuis les nouvelles routes
+async function initFiltres() {
+    try {
+        const [datesRes, genresRes] = await Promise.all([
+            window.NRV_API.getDates(),
+            window.NRV_API.getGenres()
+        ]);
 
-	if (!filtreDate || !filtreGenre) {
-		return;
-	}
+        const filtreDate = document.querySelector('#filtre-date');
+        const filtreGenre = document.querySelector('#filtre-genre');
 
-	const dates = [...new Set(spectacles.map((spectacle) => spectacle.date).filter(Boolean))].sort();
-	const genres = [...new Set(spectacles.map((spectacle) => spectacle.genre).filter(Boolean))]
-		.sort((a, b) => a.localeCompare(b, 'fr'));
+        if (filtreDate && datesRes.data) {
+            datesRes.data.forEach(date => {
+                const option = document.createElement('option');
+                option.value = date;
+                option.textContent = formatDate(date);
+                filtreDate.appendChild(option);
+            });
+        }
 
-	dates.forEach((date) => {
-		const option = document.createElement('option');
-		option.value = date;
-		option.textContent = formatDate(date);
-		filtreDate.appendChild(option);
-	});
-
-	genres.forEach((genre) => {
-		const option = document.createElement('option');
-		option.value = genre;
-		option.textContent = genre;
-		filtreGenre.appendChild(option);
-	});
+        if (filtreGenre && genresRes.data) {
+            genresRes.data.forEach(genre => {
+                const option = document.createElement('option');
+                option.value = genre;
+                option.textContent = genre;
+                filtreGenre.appendChild(option);
+            });
+        }
+    } catch (e) {
+        console.error('Erreur lors du chargement des filtres.');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
@@ -173,6 +160,16 @@ document.addEventListener('DOMContentLoaded', async function () {
 	const filtreDate = document.querySelector('#filtre-date');
 	const filtreGenre = document.querySelector('#filtre-genre');
 	const triProgramme = document.querySelector('#tri-programme');
+    
+    let paginationContainer = document.querySelector('#pagination-spectacles');
+    if (spectacleList && !paginationContainer) {
+        paginationContainer = document.createElement('div');
+        paginationContainer.id = 'pagination-spectacles';
+        paginationContainer.className = 'row pagination-container';
+        paginationContainer.style.textAlign = 'center';
+        paginationContainer.style.marginTop = '2rem';
+        spectacleList.after(paginationContainer);
+    }
 
 	if (spectacleList && !status) {
 		status = document.createElement('p');
@@ -186,18 +183,38 @@ document.addEventListener('DOMContentLoaded', async function () {
 	if (spectacleList) {
 		let spectaclesActuels = [];
 
-
 		const afficherResultats = function (spectacles) {
 			spectaclesActuels = spectacles;
-			if (status) {
-				status.hidden = true;
-			}
+			if (status) status.hidden = true;
 			spectacleList.innerHTML = spectacles.length
 				? afficherListe(spectacles)
 				: '<p class="message-vide">Aucun spectacle ne correspond à ces filtres.</p>';
 		};
 
-		const chargerSpectaclesFiltres = async function () {
+        const afficherPagination = function (meta) {
+            if (!meta || meta.total_pages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let html = '<div class="twelve columns">';
+            for (let i = 1; i <= meta.total_pages; i++) {
+                const isCurrent = i === meta.current_page;
+                html += `<button class="button ${isCurrent ? 'button-primary' : ''} btn-page" data-page="${i}" style="margin: 0 4px;">${i}</button>`;
+            }
+            html += '</div>';
+            paginationContainer.innerHTML = html;
+
+            paginationContainer.querySelectorAll('.btn-page').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const pageChoisie = parseInt(this.getAttribute('data-page'), 10);
+                    chargerSpectaclesFiltres(pageChoisie);
+                    window.scrollTo({ top: spectacleList.offsetTop - 20, behavior: 'smooth' });
+                });
+            });
+        };
+
+		const chargerSpectaclesFiltres = async function (page = 1) {
 			if (status) {
 				status.hidden = false;
 				status.textContent = 'Chargement…';
@@ -207,9 +224,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 				const result = await window.NRV_API.getSpectacles({
 					date: filtreDate ? filtreDate.value : '',
 					genre: filtreGenre ? filtreGenre.value : '',
-					tri: triProgramme ? triProgramme.value : 'date-croissante'
+					tri: triProgramme ? triProgramme.value : 'date-croissante',
+                    page: page
 				});
 				afficherResultats(result.data);
+                if (result.meta) afficherPagination(result.meta);
 			} catch {
 				if (status) {
 					status.hidden = false;
@@ -218,44 +237,33 @@ document.addEventListener('DOMContentLoaded', async function () {
 			}
 		};
 
+        // Initialisation indépendante des filtres puis de la liste
+        await initFiltres();
 		try {
 			const result = await window.NRV_API.getSpectacles();
-			remplirFiltres(result.data);
 			afficherResultats(result.data);
+            if (result.meta) afficherPagination(result.meta);
 		} catch {
 			if (status) {
 				status.textContent = 'La programmation est momentanément indisponible.';
 			}
 		}
 
-		if (filtreDate) {
-			filtreDate.addEventListener('change', chargerSpectaclesFiltres);
-		}
-		if (filtreGenre) {
-			filtreGenre.addEventListener('change', chargerSpectaclesFiltres);
-		}
-		if (triProgramme) {
-			triProgramme.addEventListener('change', chargerSpectaclesFiltres);
-		}
+		if (filtreDate) filtreDate.addEventListener('change', () => chargerSpectaclesFiltres(1));
+		if (filtreGenre) filtreGenre.addEventListener('change', () => chargerSpectaclesFiltres(1));
+		if (triProgramme) triProgramme.addEventListener('change', () => chargerSpectaclesFiltres(1));
 
 		spectacleList.addEventListener('click', async function (event) {
 			const button = event.target.closest('[data-soiree-id]');
-
-			if (!button) {
-				return;
-			}
+			if (!button) return;
 
 			button.disabled = true;
 
 			try {
 				const result = await window.NRV_API.getSoiree(button.dataset.soireeId);
 				afficherDetail(result.data);
-				if (programView) {
-					programView.hidden = true;
-				}
-				if (soireeView) {
-					soireeView.hidden = false;
-				}
+				if (programView) programView.hidden = true;
+				if (soireeView) soireeView.hidden = false;
 				window.scrollTo({ top: 0, behavior: 'smooth' });
 			} catch {
 				if (status) {
@@ -269,15 +277,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 	}
 
 	const backButton = document.querySelector('#back-to-program');
-
 	if (backButton) {
 		backButton.addEventListener('click', function () {
-			if (soireeView) {
-				soireeView.hidden = true;
-			}
-			if (programView) {
-				programView.hidden = false;
-			}
+			if (soireeView) soireeView.hidden = true;
+			if (programView) programView.hidden = false;
 		});
 	}
 });

@@ -20,6 +20,14 @@ return static function (App $app, CatalogRepository $catalog): void {
             ->withHeader('Content-Type', 'application/json; charset=utf-8');
     };
 
+    $app->get('/api/dates', static function (ServerRequestInterface $request, ResponseInterface $response) use ($catalog, $json): ResponseInterface {
+        return $json($response, ['data' => $catalog->findAvailableDates()]);
+    });
+
+    $app->get('/api/genres', static function (ServerRequestInterface $request, ResponseInterface $response) use ($catalog, $json): ResponseInterface {
+        return $json($response, ['data' => $catalog->findAvailableGenres()]);
+    });
+
     $app->get('/api/spectacles', static function (
         ServerRequestInterface $request,
         ResponseInterface $response
@@ -29,7 +37,23 @@ return static function (App $app, CatalogRepository $catalog): void {
         $genre = isset($query['genre']) && is_string($query['genre']) ? trim($query['genre']) : null;
         $tri = isset($query['tri']) && is_string($query['tri']) ? trim($query['tri']) : null;
 
-        return $json($response, ['data' => $catalog->findAllSpectacles($date ?: null, $genre ?: null, $tri)]);
+        $page = isset($query['page']) ? max(1, (int)$query['page']) : 1;
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+
+        $spectacles = $catalog->findAllSpectacles($date ?: null, $genre ?: null, $tri, $limit, $offset);
+        $totalItems = $catalog->countAllSpectacles($date ?: null, $genre ?: null);
+        $totalPages = (int) ceil($totalItems / $limit);
+
+        return $json($response, [
+            'data' => $spectacles,
+            'meta' => [
+                'current_page' => $page,
+                'total_pages' => $totalPages,
+                'total_items' => $totalItems,
+                'items_per_page' => $limit
+            ]
+        ]);
     });
 
     $app->get('/api/soirees/{id}', static function (
