@@ -12,24 +12,69 @@ function escapeHtml(value) {
 
 function formatDate(value) {
 	const date = new Date(value + 'T00:00:00');
-	if (Number.isNaN(date.getTime())) return value;
+
+	if (Number.isNaN(date.getTime())) {
+		return value;
+	}
+
 	return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(date);
 }
 
 function getImageUrl(value) {
-	if (!value) return null;
+	if (!value) {
+		return null;
+	}
+
 	try {
 		const url = new URL(value, window.location.origin);
-		if (url.protocol === 'http:' || url.protocol === 'https:') return url.href;
+
+		if (url.protocol === 'http:' || url.protocol === 'https:') {
+			return url.href;
+		}
 	} catch {
 		return null;
 	}
+
 	return null;
+}
+
+const CART_STORAGE_KEY = 'nrv-panier';
+
+function lirePanier() {
+	const contenu = window.localStorage.getItem(CART_STORAGE_KEY);
+	const panier = contenu ? JSON.parse(contenu) : [];
+
+	if (!Array.isArray(panier) || panier.some(function (article) {
+		return !article || !Number.isInteger(article.id_soiree) || article.id_soiree < 1
+			|| typeof article.nom !== 'string'
+			|| typeof article.date !== 'string'
+			|| typeof article.lieu !== 'string'
+			|| !Number.isInteger(article.quantite) || article.quantite < 1
+			|| !Number.isFinite(article.prix) || article.prix < 0
+			|| !Number.isInteger(article.places_disponibles) || article.places_disponibles < 0;
+	})) {
+		throw new Error('Le contenu du panier est invalide.');
+	}
+
+	return panier;
+}
+
+function enregistrerPanier(panier) {
+	window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(panier));
+}
+
+function formatPrix(prix) {
+	return new Intl.NumberFormat('fr-FR', {
+		style: 'currency',
+		currency: 'EUR'
+	}).format(prix);
 }
 
 function afficherCarte(spectacle) {
 	const imageUrl = getImageUrl(spectacle.image);
-	const artistes = spectacle.artistes.map(artist => escapeHtml(artist.nom)).join(', ');
+	const artistes = spectacle.artistes.map(function (artist) {
+		return escapeHtml(artist.nom);
+	}).join(', ');
 
 	return `
 		<article class="four columns carte-spectacle">
@@ -56,27 +101,36 @@ function afficherCarte(spectacle) {
 
 function afficherListe(spectacles) {
 	let html = '';
+
 	for (let i = 0; i < spectacles.length; i += 3) {
 		html += '<div class="row">';
 		html += spectacles.slice(i, i + 3).map(afficherCarte).join('');
 		html += '</div>';
 	}
+
 	return html;
 }
 
 function afficherDetail(soiree) {
 	const content = document.querySelector('#soiree-content');
+	const idSoiree = Number(soiree.id_soiree);
+	const prix = Number(soiree.prix);
+	const placesDisponibles = Number(soiree.places_disponibles);
 	const shows = soiree.spectacles.length
-		? soiree.spectacles.map(show => `
+		? soiree.spectacles.map(function (show) {
+			return `
 				<article class="row ligne-spectacle">
 					<time class="two columns horaire-spectacle">${escapeHtml(show.horaire)}</time>
 					<div class="ten columns description-spectacle">
 						<h3>${escapeHtml(show.titre)}</h3>
-						<p>${show.artistes.map(a => escapeHtml(a.nom)).join(', ') || 'Artiste à annoncer'}</p>
+						<p>${show.artistes.map(function (artist) {
+							return escapeHtml(artist.nom);
+						}).join(', ') || 'Artiste à annoncer'}</p>
 						<p>${escapeHtml(show.genre)}${show.description ? ` · ${escapeHtml(show.description)}` : ''}</p>
 						${show.video ? `<a href="${escapeHtml(getImageUrl(show.video) || '#')}" target="_blank" rel="noreferrer">Voir des vidéos</a>` : ''}
 					</div>
-				</article>`).join('')
+				</article>`;
+		}).join('')
 		: '<p class="message-vide">Aucun spectacle n’est encore renseigné pour cette soirée.</p>';
 
 	content.innerHTML = `
@@ -91,7 +145,7 @@ function afficherDetail(soiree) {
 			<div class="three columns"><p><strong>Date et début</strong><br>${escapeHtml(formatDate(soiree.date))} · ${escapeHtml(soiree.horaire_debut)}</p></div>
 			<div class="three columns"><p><strong>Lieu</strong><br>${escapeHtml(soiree.lieu)}</p></div>
 			<div class="three columns"><p><strong>Places restantes</strong><br>${escapeHtml(soiree.places_disponibles)}</p></div>
-			<div class="three columns"><p><strong>Tarif indiqué</strong><br>${escapeHtml(Number(soiree.prix).toFixed(2))} €</p></div>
+			<div class="three columns"><p><strong>Tarif indiqué</strong><br>${escapeHtml(formatPrix(prix))}</p></div>
 		</div>
 		<div class="row"><div class="twelve columns"><h2 class="titre-spectacles">Au programme</h2></div></div>
 		${shows}
@@ -100,15 +154,88 @@ function afficherDetail(soiree) {
 				<div class="contenu-banniere">
 					<div>
 						<strong>Prêt à vivre le concert ?</strong>
-						<p class="texte-discret">${escapeHtml(soiree.places_disponibles)} places restantes · ${escapeHtml(Number(soiree.prix).toFixed(2))} € · ${escapeHtml(soiree.lieu)}</p>
+						<p class="texte-discret">${escapeHtml(placesDisponibles)} places restantes · ${escapeHtml(formatPrix(prix))} · ${escapeHtml(soiree.lieu)}</p>
 					</div>
-					<button class="button button-primary" type="button">Billetterie</button>
+					<div class="actions-billetterie">
+						<label for="quantite-billets">Billets</label>
+						<input id="quantite-billets" type="number" min="1" max="${escapeHtml(placesDisponibles)}" value="1" ${placesDisponibles < 1 ? 'disabled' : ''}>
+						<button class="button button-primary" type="button" data-ajouter-billet
+							data-id-soiree="${escapeHtml(idSoiree)}"
+							data-nom="${escapeHtml(soiree.nom)}"
+							data-date="${escapeHtml(soiree.date)}"
+							data-lieu="${escapeHtml(soiree.lieu)}"
+							data-prix="${escapeHtml(prix)}"
+							data-places="${escapeHtml(placesDisponibles)}"
+							${placesDisponibles < 1 ? 'disabled' : ''}>Ajouter au panier</button>
+						<a class="button button-light" href="/panier.html">Voir le panier</a>
+					</div>
 				</div>
+				<p id="etat-ajout-panier" class="etat-ajout-panier" role="status" aria-live="polite"></p>
 			</div>
 		</div>`;
 }
 
-// Remplissage asynchrone des filtres depuis les nouvelles routes
+function afficherPanier() {
+	const content = document.querySelector('#panier-content');
+	const status = document.querySelector('#etat-panier');
+
+	if (!content) {
+		return;
+	}
+
+	try {
+		const panier = lirePanier();
+		const total = panier.reduce((montant, article) => montant + article.prix * article.quantite, 0);
+
+		content.innerHTML = panier.length
+			? panier.map(function (article) {
+				return `
+					<article class="article-panier">
+						<div class="entete-article-panier">
+							<strong>NRV<br>LIVE</strong>
+							<span aria-hidden="true">&#9889;</span>
+						</div>
+						<div class="corps-article-panier">
+							<div class="infos-article-panier">
+								<h2>${escapeHtml(article.nom)}</h2>
+								<p>${escapeHtml(formatDate(article.date))} · ${escapeHtml(article.lieu)}</p>
+								<a href="/">Voir la programmation <span aria-hidden="true">↗</span></a>
+								<button class="bouton-retirer-panier" type="button" data-retirer-panier="${escapeHtml(article.id_soiree)}">Retirer</button>
+							</div>
+							<div class="achat-article-panier">
+								<div class="controle-quantite-panier">
+									<span>Tickets</span>
+									<button type="button" aria-label="Retirer un billet" data-quantite-step="${escapeHtml(article.id_soiree)}" data-delta="-1" ${article.quantite <= 1 ? 'disabled' : ''}>−</button>
+									<input type="number" min="1" max="${escapeHtml(article.places_disponibles)}"
+										value="${escapeHtml(article.quantite)}" aria-label="Quantité de billets pour ${escapeHtml(article.nom)}"
+										data-quantite-panier="${escapeHtml(article.id_soiree)}">
+									<button type="button" aria-label="Ajouter un billet" data-quantite-step="${escapeHtml(article.id_soiree)}" data-delta="1" ${article.quantite >= article.places_disponibles ? 'disabled' : ''}>+</button>
+								</div>
+								<strong class="prix-article-panier">${escapeHtml(formatPrix(article.prix * article.quantite))}</strong>
+							</div>
+						</div>
+					</article>`;
+			}).join('')
+			: `<div class="panneau-vide">
+					<div class="logo-panneau-vide"><span>NRV</span><strong>LIVE</strong><b>⚡</b></div>
+					<h2>Votre panier est vide</h2>
+					<p>Les billets ajoutés depuis la programmation apparaîtront ici.</p>
+					<a class="button button-primary" href="/">Voir le programme</a>
+				</div>`;
+
+		document.querySelector('#total-panier').textContent = formatPrix(total);
+		if (status) {
+			status.textContent = '';
+		}
+	} catch (error) {
+		if (status) {
+			status.textContent = 'Impossible de lire le panier. Vérifiez les paramètres de stockage de votre navigateur.';
+		}
+		console.error(error);
+	}
+}
+
+
 async function initFiltres() {
     try {
         const [datesRes, genresRes] = await Promise.all([
@@ -141,6 +268,7 @@ async function initFiltres() {
     }
 }
 
+
 document.addEventListener('DOMContentLoaded', async function () {
 	const menuToggle = document.querySelector('.bouton-menu-mobile');
 	const mobileDrawer = document.querySelector('.menu-mobile');
@@ -160,16 +288,17 @@ document.addEventListener('DOMContentLoaded', async function () {
 	const filtreDate = document.querySelector('#filtre-date');
 	const filtreGenre = document.querySelector('#filtre-genre');
 	const triProgramme = document.querySelector('#tri-programme');
-    
-    let paginationContainer = document.querySelector('#pagination-spectacles');
-    if (spectacleList && !paginationContainer) {
-        paginationContainer = document.createElement('div');
-        paginationContainer.id = 'pagination-spectacles';
-        paginationContainer.className = 'row pagination-container';
-        paginationContainer.style.textAlign = 'center';
-        paginationContainer.style.marginTop = '2rem';
-        spectacleList.after(paginationContainer);
-    }
+	const contenuSoiree = document.querySelector('#soiree-content');
+
+	let paginationContainer = document.querySelector('#pagination-spectacles');
+	if (spectacleList && !paginationContainer) {
+		paginationContainer = document.createElement('div');
+		paginationContainer.id = 'pagination-spectacles';
+		paginationContainer.className = 'row pagination-container';
+		paginationContainer.style.textAlign = 'center';
+		paginationContainer.style.marginTop = '2rem';
+		spectacleList.after(paginationContainer);
+	}
 
 	if (spectacleList && !status) {
 		status = document.createElement('p');
@@ -183,36 +312,40 @@ document.addEventListener('DOMContentLoaded', async function () {
 	if (spectacleList) {
 		let spectaclesActuels = [];
 
+
 		const afficherResultats = function (spectacles) {
 			spectaclesActuels = spectacles;
-			if (status) status.hidden = true;
+			if (status) {
+				status.hidden = true;
+			}
 			spectacleList.innerHTML = spectacles.length
 				? afficherListe(spectacles)
 				: '<p class="message-vide">Aucun spectacle ne correspond à ces filtres.</p>';
 		};
 
-        const afficherPagination = function (meta) {
-            if (!meta || meta.total_pages <= 1) {
-                paginationContainer.innerHTML = '';
-                return;
-            }
+		const afficherPagination = function (meta) {
+			if (!paginationContainer || !meta || meta.total_pages <= 1) {
+				if (paginationContainer) paginationContainer.innerHTML = '';
+				return;
+			}
 
-            let html = '<div class="twelve columns">';
-            for (let i = 1; i <= meta.total_pages; i++) {
-                const isCurrent = i === meta.current_page;
-                html += `<button class="button ${isCurrent ? 'button-primary' : ''} btn-page" data-page="${i}" style="margin: 0 4px;">${i}</button>`;
-            }
-            html += '</div>';
-            paginationContainer.innerHTML = html;
+			let html = '<div class="twelve columns">';
+			for (let i = 1; i <= meta.total_pages; i += 1) {
+				const isCurrent = i === meta.current_page;
+				html += `<button class="button ${isCurrent ? 'button-primary' : ''} btn-page" type="button" data-page="${i}" aria-current="${isCurrent ? 'page' : 'false'}" style="margin: 0 4px;">${i}</button>`;
+			}
+			html += '</div>';
+			paginationContainer.innerHTML = html;
+		};
 
-            paginationContainer.querySelectorAll('.btn-page').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const pageChoisie = parseInt(this.getAttribute('data-page'), 10);
-                    chargerSpectaclesFiltres(pageChoisie);
-                    window.scrollTo({ top: spectacleList.offsetTop - 20, behavior: 'smooth' });
-                });
-            });
-        };
+		if (paginationContainer) {
+			paginationContainer.addEventListener('click', function (event) {
+				const button = event.target.closest('[data-page]');
+				if (!button) return;
+				chargerSpectaclesFiltres(Number(button.dataset.page));
+				window.scrollTo({ top: spectacleList.offsetTop - 20, behavior: 'smooth' });
+			});
+		}
 
 		const chargerSpectaclesFiltres = async function (page = 1) {
 			if (status) {
@@ -225,10 +358,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 					date: filtreDate ? filtreDate.value : '',
 					genre: filtreGenre ? filtreGenre.value : '',
 					tri: triProgramme ? triProgramme.value : 'date-croissante',
-                    page: page
+					page: page
 				});
 				afficherResultats(result.data);
-                if (result.meta) afficherPagination(result.meta);
+				afficherPagination(result.meta);
 			} catch {
 				if (status) {
 					status.hidden = false;
@@ -237,33 +370,45 @@ document.addEventListener('DOMContentLoaded', async function () {
 			}
 		};
 
-        // Initialisation indépendante des filtres puis de la liste
-        await initFiltres();
+		await initFiltres();
 		try {
-			const result = await window.NRV_API.getSpectacles();
+			const result = await window.NRV_API.getSpectacles({ page: 1 });
 			afficherResultats(result.data);
-            if (result.meta) afficherPagination(result.meta);
+			afficherPagination(result.meta);
 		} catch {
 			if (status) {
 				status.textContent = 'La programmation est momentanément indisponible.';
 			}
 		}
 
-		if (filtreDate) filtreDate.addEventListener('change', () => chargerSpectaclesFiltres(1));
-		if (filtreGenre) filtreGenre.addEventListener('change', () => chargerSpectaclesFiltres(1));
-		if (triProgramme) triProgramme.addEventListener('change', () => chargerSpectaclesFiltres(1));
+		if (filtreDate) {
+			filtreDate.addEventListener('change', chargerSpectaclesFiltres);
+		}
+		if (filtreGenre) {
+			filtreGenre.addEventListener('change', chargerSpectaclesFiltres);
+		}
+		if (triProgramme) {
+			triProgramme.addEventListener('change', chargerSpectaclesFiltres);
+		}
 
 		spectacleList.addEventListener('click', async function (event) {
 			const button = event.target.closest('[data-soiree-id]');
-			if (!button) return;
+
+			if (!button) {
+				return;
+			}
 
 			button.disabled = true;
 
 			try {
 				const result = await window.NRV_API.getSoiree(button.dataset.soireeId);
 				afficherDetail(result.data);
-				if (programView) programView.hidden = true;
-				if (soireeView) soireeView.hidden = false;
+				if (programView) {
+					programView.hidden = true;
+				}
+				if (soireeView) {
+					soireeView.hidden = false;
+				}
 				window.scrollTo({ top: 0, behavior: 'smooth' });
 			} catch {
 				if (status) {
@@ -277,10 +422,142 @@ document.addEventListener('DOMContentLoaded', async function () {
 	}
 
 	const backButton = document.querySelector('#back-to-program');
+
 	if (backButton) {
 		backButton.addEventListener('click', function () {
-			if (soireeView) soireeView.hidden = true;
-			if (programView) programView.hidden = false;
+			if (soireeView) {
+				soireeView.hidden = true;
+			}
+			if (programView) {
+				programView.hidden = false;
+			}
+		});
+	}
+
+	if (contenuSoiree) {
+		contenuSoiree.addEventListener('click', function (event) {
+			const button = event.target.closest('[data-ajouter-billet]');
+
+			if (!button) {
+				return;
+			}
+
+			const statusAjout = document.querySelector('#etat-ajout-panier');
+			const input = document.querySelector('#quantite-billets');
+			const quantite = Number(input.value);
+			const placesDisponibles = Number(button.dataset.places);
+
+			if (!Number.isInteger(quantite) || quantite < 1) {
+				statusAjout.textContent = 'Choisissez au moins un billet.';
+				return;
+			}
+
+			try {
+				const panier = lirePanier();
+				const idSoiree = Number(button.dataset.idSoiree);
+				const article = panier.find((item) => item.id_soiree === idSoiree);
+				const dejaDansPanier = article ? article.quantite : 0;
+
+				if (quantite + dejaDansPanier > placesDisponibles) {
+					statusAjout.textContent = `Il ne reste que ${Math.max(0, placesDisponibles - dejaDansPanier)} place(s) disponible(s) pour cette soirée.`;
+					return;
+				}
+
+				if (article) {
+					article.quantite += quantite;
+				} else {
+					panier.push({
+						id_soiree: idSoiree,
+						nom: button.dataset.nom,
+						date: button.dataset.date,
+						lieu: button.dataset.lieu,
+						prix: Number(button.dataset.prix),
+						places_disponibles: placesDisponibles,
+						quantite: quantite
+					});
+				}
+
+				enregistrerPanier(panier);
+				statusAjout.textContent = `${quantite} billet(s) ajouté(s) au panier.`;
+			} catch (error) {
+				statusAjout.textContent = 'Impossible d’enregistrer le panier dans ce navigateur.';
+				console.error(error);
+			}
+		});
+	}
+
+	const contenuPanier = document.querySelector('#panier-content');
+
+	if (contenuPanier) {
+		afficherPanier();
+		contenuPanier.addEventListener('click', function (event) {
+			const stepButton = event.target.closest('[data-quantite-step]');
+
+			if (stepButton) {
+				try {
+					const panier = lirePanier();
+					const idSoiree = Number(stepButton.dataset.quantiteStep);
+					const article = panier.find((item) => item.id_soiree === idSoiree);
+
+					if (article) {
+						const quantite = article.quantite + Number(stepButton.dataset.delta);
+						if (quantite >= 1 && quantite <= article.places_disponibles) {
+							article.quantite = quantite;
+							enregistrerPanier(panier);
+							afficherPanier();
+						}
+					}
+				} catch (error) {
+					document.querySelector('#etat-panier').textContent = 'Impossible de modifier le panier.';
+					console.error(error);
+				}
+				return;
+			}
+
+			const button = event.target.closest('[data-retirer-panier]');
+
+			if (!button) {
+				return;
+			}
+
+			try {
+				const idSoiree = Number(button.dataset.retirerPanier);
+				enregistrerPanier(lirePanier().filter((article) => article.id_soiree !== idSoiree));
+				afficherPanier();
+			} catch (error) {
+				document.querySelector('#etat-panier').textContent = 'Impossible de modifier le panier.';
+				console.error(error);
+			}
+		});
+		contenuPanier.addEventListener('change', function (event) {
+			const input = event.target.closest('[data-quantite-panier]');
+
+			if (!input) {
+				return;
+			}
+
+			const quantite = Number(input.value);
+			const placesDisponibles = Number(input.max);
+
+			if (!Number.isInteger(quantite) || quantite < 1 || quantite > placesDisponibles) {
+				document.querySelector('#etat-panier').textContent = `La quantité doit être comprise entre 1 et ${placesDisponibles}.`;
+				return;
+			}
+
+			try {
+				const idSoiree = Number(input.dataset.quantitePanier);
+				const panier = lirePanier();
+				const article = panier.find((item) => item.id_soiree === idSoiree);
+
+				if (article) {
+					article.quantite = quantite;
+					enregistrerPanier(panier);
+					afficherPanier();
+				}
+			} catch (error) {
+				document.querySelector('#etat-panier').textContent = 'Impossible de modifier le panier.';
+				console.error(error);
+			}
 		});
 	}
 });

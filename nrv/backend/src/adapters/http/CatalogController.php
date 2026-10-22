@@ -17,6 +17,16 @@ final class CatalogController
     ) {
     }
 
+    public function dates(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        return $this->json($response, ['data' => $this->listerSpectacles->dates()]);
+    }
+
+    public function genres(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        return $this->json($response, ['data' => $this->listerSpectacles->genres()]);
+    }
+
     public function listerSpectacles(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $query = $request->getQueryParams();
@@ -36,8 +46,32 @@ final class CatalogController
             return $this->json($response, ['error' => 'Tri invalide'], 400);
         }
 
+        $page = 1;
+        if (isset($query['page'])) {
+            $pageValidee = filter_var($query['page'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            if ($pageValidee === false) {
+                return $this->json($response, ['error' => 'Numéro de page invalide'], 400);
+            }
+            $page = $pageValidee;
+        }
+
+        $limit = 9;
+        $totalItems = $this->listerSpectacles->count($date ?: null, $genre ?: null);
+        $totalPages = (int) ceil($totalItems / $limit);
+        if ($totalPages > 0 && $page > $totalPages) {
+            $page = $totalPages;
+        }
+        $offset = ($page - 1) * $limit;
+        $spectacles = $this->listerSpectacles->execute($date ?: null, $genre ?: null, $tri, $limit, $offset);
+
         return $this->json($response, [
-            'data' => $this->listerSpectacles->execute($date ?: null, $genre ?: null, $tri),
+            'data' => $spectacles,
+            'meta' => [
+                'current_page' => $page,
+                'total_pages' => $totalPages,
+                'total_items' => $totalItems,
+                'items_per_page' => $limit,
+            ],
         ]);
     }
 

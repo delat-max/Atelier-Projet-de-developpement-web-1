@@ -26,7 +26,7 @@ window.NRV_API = {
         if (filters.date) params.set('date', filters.date);
         if (filters.genre) params.set('genre', filters.genre);
         if (filters.tri) params.set('tri', filters.tri);
-        if (filters.page) params.set('page', filters.page); 
+        if (filters.page) params.set('page', filters.page);
 
         const query = params.toString();
         return this.request(query ? `/api/spectacles?${query}` : '/api/spectacles');

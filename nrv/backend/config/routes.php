@@ -11,6 +11,10 @@ return static function (
     CatalogController $catalogController,
     UtilisateurController $utilisateurController
 ): void {
+    $app->get('/api/dates', [$catalogController, 'dates']);
+
+    $app->get('/api/genres', [$catalogController, 'genres']);
+
     $app->get(
         '/api/spectacles',
         [$catalogController, 'listerSpectacles']
