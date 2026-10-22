@@ -3,18 +3,21 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Profil | NRV.net</title>
+    <title>Mon profil | NRV.net</title>
     <link rel="stylesheet" href="/css/normalize.css">
     <link rel="stylesheet" href="/css/skeleton.css">
     <link rel="stylesheet" href="/css/style.css">
     <script src="/js/main.js" defer></script>
+    <script src="/js/auth.js" defer></script>
 </head>
 <body>
 <header class="entete-site">
     <div class="container contenu-entete">
         <div class="row ligne-entete">
             <div class="three columns colonne-logo">
-                <a class="lien-logo" href="/" aria-label="NRV.net, accueil"><span class="eclair-logo">⚡</span>NRV<span class="point-logo">.net</span></a>
+                <a class="lien-logo" href="/" aria-label="NRV.net, accueil">
+                    <span class="eclair-logo">⚡</span>NRV<span class="point-logo">.net</span>
+                </a>
             </div>
             <div class="five columns recherche-entete ordinateur-seulement">
                 <label class="cache-visuellement" for="site-search">Rechercher</label>
@@ -24,7 +27,7 @@
                 <a class="button button-primary bouton-entete" href="/panier.html">Panier ↗</a>
             </div>
             <div class="two columns action-entete ordinateur-seulement">
-                <a class="button button-light bouton-entete" href="/profil.html">Profil</a>
+                <a class="button button-light bouton-entete" href="/profil-connecte.html">Mon profil</a>
             </div>
             <button class="bouton-menu-mobile mobile-seulement" type="button" aria-label="Ouvrir le menu" aria-expanded="false">
                 <span></span><span></span><span></span>
@@ -40,24 +43,106 @@
             <label class="cache-visuellement" for="mobile-search">Rechercher</label>
             <input id="mobile-search" class="u-full-width recherche-menu" type="search" placeholder="Rechercher un groupe, une scène, un pass…">
             <a class="button button-primary bouton-menu" href="/panier.html">Panier</a>
-            <a class="button button-light bouton-menu" href="/profil.html">Profil</a>
+            <a class="button button-light bouton-menu" href="/profil-connecte.html">Mon profil</a>
         </div>
     </nav>
 </header>
+
 <main class="container cadre-page page-profil">
-    <section class="entete-profil" aria-labelledby="profile-title">
-        <div class="avatar-profil">AS</div>
-        <div class="infos-profil">
-            <h1 id="profile-title">Nom</h1>
-            <a href="mailto:maria-robotnik@gmail.com">maria-robotnik@gmail.com</a>
+    <p id="auth-message" role="status" aria-live="polite"></p>
+
+    <section id="profile-content" hidden>
+        <div class="entete-profil">
+            <div id="profile-avatar" class="avatar-profil" aria-hidden="true"></div>
+            <div class="infos-profil">
+                <p class="surtitre">ESPACE PERSONNEL</p>
+                <h1 id="profile-title">Mon profil</h1>
+                <p id="profile-email-display"></p>
+            </div>
         </div>
-    </section>
-    <h2 class="titre-commandes">Commandes :</h2>
-    <section class="liste-commandes" aria-label="Commandes">
-        <div class="commande-vide">
-            <strong>Aucune commande</strong>
-            <p>Vos commandes apparaîtront ici.</p>
-        </div>
+
+        <section aria-labelledby="profile-edit-title">
+            <h2 id="profile-edit-title">Mes informations</h2>
+
+            <form id="profile-form">
+                <label for="edit-prenom">Prénom</label>
+                <input
+                    id="edit-prenom"
+                    class="u-full-width"
+                    type="text"
+                    name="prenom"
+                    autocomplete="given-name"
+                    maxlength="50"
+                    required
+                >
+
+                <label for="edit-nom">Nom</label>
+                <input
+                    id="edit-nom"
+                    class="u-full-width"
+                    type="text"
+                    name="nom"
+                    autocomplete="family-name"
+                    maxlength="50"
+                    required
+                >
+
+                <label for="edit-email">Adresse email</label>
+                <input
+                    id="edit-email"
+                    class="u-full-width"
+                    type="email"
+                    name="email"
+                    autocomplete="email"
+                    maxlength="100"
+                    required
+                >
+
+                <button class="button button-primary" type="submit">
+                    Enregistrer les modifications
+                </button>
+            </form>
+        </section>
+
+        <hr>
+
+        <section aria-labelledby="password-title">
+            <h2 id="password-title">Modifier mon mot de passe</h2>
+
+            <form id="password-form">
+                <label for="current-password">Mot de passe actuel</label>
+                <input
+                    id="current-password"
+                    class="u-full-width"
+                    type="password"
+                    name="current_password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <label for="new-password">Nouveau mot de passe</label>
+                <input
+                    id="new-password"
+                    class="u-full-width"
+                    type="password"
+                    name="new_password"
+                    autocomplete="new-password"
+                    minlength="10"
+                    placeholder="Au moins 10 caractères"
+                    required
+                >
+
+                <button class="button button-primary" type="submit">
+                    Changer le mot de passe
+                </button>
+            </form>
+        </section>
+
+        <hr>
+
+        <button id="logout-button" class="button" type="button">
+            Se déconnecter
+        </button>
     </section>
 </main>
 </body>

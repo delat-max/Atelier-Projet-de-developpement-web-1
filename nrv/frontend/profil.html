@@ -3,18 +3,21 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Profil | NRV.net</title>
+    <title>Connexion et inscription | NRV.net</title>
     <link rel="stylesheet" href="/css/normalize.css">
     <link rel="stylesheet" href="/css/skeleton.css">
     <link rel="stylesheet" href="/css/style.css">
     <script src="/js/main.js" defer></script>
+    <script src="/js/auth.js" defer></script>
 </head>
 <body>
 <header class="entete-site">
     <div class="container contenu-entete">
         <div class="row ligne-entete">
             <div class="three columns colonne-logo">
-                <a class="lien-logo" href="/" aria-label="NRV.net, accueil"><span class="eclair-logo">⚡</span>NRV<span class="point-logo">.net</span></a>
+                <a class="lien-logo" href="/" aria-label="NRV.net, accueil">
+                    <span class="eclair-logo">⚡</span>NRV<span class="point-logo">.net</span>
+                </a>
             </div>
             <div class="five columns recherche-entete ordinateur-seulement">
                 <label class="cache-visuellement" for="site-search">Rechercher</label>
@@ -44,17 +47,106 @@
         </div>
     </nav>
 </header>
+
 <main class="container cadre-page page-connexion">
-    <section class="carte-connexion" aria-labelledby="login-title">
-        <form>
-            <label for="profile-email">Email</label>
-            <input id="profile-email" class="u-full-width" type="email" placeholder="email">
-            <label for="profile-password">Mot de passe</label>
-            <input id="profile-password" class="u-full-width" type="password" placeholder="mot de passe">
-            <button class="button bouton-connexion" type="button">Se connecter</button>
+    <div class="carte-connexion">
+        <h1 id="login-title">Connexion</h1>
+        <p>Retrouve ton espace NRV.net.</p>
+
+        <form id="login-form">
+            <label for="login-email">Adresse email</label>
+            <input
+                id="login-email"
+                class="u-full-width"
+                type="email"
+                name="email"
+                placeholder="toi@exemple.fr"
+                autocomplete="email"
+                maxlength="100"
+                required
+            >
+
+            <label for="login-password">Mot de passe</label>
+            <input
+                id="login-password"
+                class="u-full-width"
+                type="password"
+                name="password"
+                placeholder="Ton mot de passe"
+                autocomplete="current-password"
+                required
+            >
+
+            <button class="button bouton-connexion" type="submit">
+                Se connecter
+            </button>
         </form>
-        <a href="#">Mot de passe oublié ?</a>
-    </section>
+
+        <hr>
+
+        <h2>Créer un compte</h2>
+        <p>Rejoins NRV.net pour retrouver ton profil.</p>
+
+        <form id="register-form">
+            <label for="register-prenom">Prénom</label>
+            <input
+                id="register-prenom"
+                class="u-full-width"
+                type="text"
+                name="prenom"
+                placeholder="Ton prénom"
+                autocomplete="given-name"
+                maxlength="50"
+                required
+            >
+
+            <label for="register-nom">Nom</label>
+            <input
+                id="register-nom"
+                class="u-full-width"
+                type="text"
+                name="nom"
+                placeholder="Ton nom"
+                autocomplete="family-name"
+                maxlength="50"
+                required
+            >
+
+            <label for="register-email">Adresse email</label>
+            <input
+                id="register-email"
+                class="u-full-width"
+                type="email"
+                name="email"
+                placeholder="toi@exemple.fr"
+                autocomplete="email"
+                maxlength="100"
+                required
+            >
+
+            <label for="register-password">Mot de passe</label>
+            <input
+                id="register-password"
+                class="u-full-width"
+                type="password"
+                name="password"
+                placeholder="Au moins 10 caractères"
+                autocomplete="new-password"
+                minlength="10"
+                required
+            >
+
+            <button class="button bouton-connexion" type="submit">
+                Créer mon compte
+            </button>
+        </form>
+
+        <p id="auth-message" role="status" aria-live="polite"></p>
+
+        <p>
+            <a href="/">← Retour au programme</a>
+        </p>
+    </div>
 </main>
 </body>
 </html>
