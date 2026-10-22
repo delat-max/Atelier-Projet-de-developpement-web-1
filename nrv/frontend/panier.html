@@ -6,8 +6,8 @@
     <title>Panier | NRV.net</title>
     <link rel="stylesheet" href="/css/normalize.css">
     <link rel="stylesheet" href="/css/skeleton.css">
-    <link rel="stylesheet" href="/css/style.css">
-    <script src="/js/main.js" defer></script>
+    <link rel="stylesheet" href="/css/style.css?v=20261022-2">
+    <script src="/js/main.js?v=20261022-2" defer></script>
 </head>
 <body>
 <header class="entete-site">
@@ -47,20 +47,14 @@
 <main class="container cadre-page contenu-page">
     <h1 class="titre-page">Votre Panier</h1>
     <div class="row mise-en-page-panier">
-        <section class="eight columns liste-panier" aria-label="Articles du panier">
-            <div class="panneau-vide">
-                <div class="logo-panneau-vide"><span>NRV</span><strong>LIVE</strong><b>⚡</b></div>
-                <h2>Votre panier est vide</h2>
-                <p>Les billets ajoutés depuis la programmation apparaîtront ici.</p>
-                <a class="button button-primary" href="/">Voir le programme</a>
-            </div>
+        <section class="twelve columns liste-panier" aria-label="Articles du panier">
+            <p id="etat-panier" role="status" aria-live="polite"></p>
+            <div id="panier-content"></div>
         </section>
-        <aside class="four columns resume-panier" aria-labelledby="basket-summary-title">
-            <h2 id="basket-summary-title">Récapitulatif</h2>
-            <div class="ligne-resume"><span>Tickets</span><strong>0</strong></div>
-            <div class="ligne-resume"><span>Total</span><strong>0€</strong></div>
+        <div class="resume-panier" aria-labelledby="panier-summary-title">
+            <p id="panier-summary-title">Total <strong id="total-panier">0 €</strong></p>
             <button class="button button-primary bouton-payer" type="button" disabled>Payer ↗</button>
-        </aside>
+        </div>
     </div>
 </main>
 </body>

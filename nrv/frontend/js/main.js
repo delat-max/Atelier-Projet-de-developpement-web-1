@@ -38,6 +38,38 @@ function getImageUrl(value) {
 	return null;
 }
 
+const CART_STORAGE_KEY = 'nrv-panier';
+
+function lirePanier() {
+	const contenu = window.localStorage.getItem(CART_STORAGE_KEY);
+	const panier = contenu ? JSON.parse(contenu) : [];
+
+	if (!Array.isArray(panier) || panier.some(function (article) {
+		return !article || !Number.isInteger(article.id_soiree) || article.id_soiree < 1
+			|| typeof article.nom !== 'string'
+			|| typeof article.date !== 'string'
+			|| typeof article.lieu !== 'string'
+			|| !Number.isInteger(article.quantite) || article.quantite < 1
+			|| !Number.isFinite(article.prix) || article.prix < 0
+			|| !Number.isInteger(article.places_disponibles) || article.places_disponibles < 0;
+	})) {
+		throw new Error('Le contenu du panier est invalide.');
+	}
+
+	return panier;
+}
+
+function enregistrerPanier(panier) {
+	window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(panier));
+}
+
+function formatPrix(prix) {
+	return new Intl.NumberFormat('fr-FR', {
+		style: 'currency',
+		currency: 'EUR'
+	}).format(prix);
+}
+
 function afficherCarte(spectacle) {
 	const imageUrl = getImageUrl(spectacle.image);
 	const artistes = spectacle.artistes.map(function (artist) {
@@ -81,6 +113,9 @@ function afficherListe(spectacles) {
 
 function afficherDetail(soiree) {
 	const content = document.querySelector('#soiree-content');
+	const idSoiree = Number(soiree.id_soiree);
+	const prix = Number(soiree.prix);
+	const placesDisponibles = Number(soiree.places_disponibles);
 	const shows = soiree.spectacles.length
 		? soiree.spectacles.map(function (show) {
 			return `
@@ -110,7 +145,7 @@ function afficherDetail(soiree) {
 			<div class="three columns"><p><strong>Date et début</strong><br>${escapeHtml(formatDate(soiree.date))} · ${escapeHtml(soiree.horaire_debut)}</p></div>
 			<div class="three columns"><p><strong>Lieu</strong><br>${escapeHtml(soiree.lieu)}</p></div>
 			<div class="three columns"><p><strong>Places restantes</strong><br>${escapeHtml(soiree.places_disponibles)}</p></div>
-			<div class="three columns"><p><strong>Tarif indiqué</strong><br>${escapeHtml(Number(soiree.prix).toFixed(2))} €</p></div>
+			<div class="three columns"><p><strong>Tarif indiqué</strong><br>${escapeHtml(formatPrix(prix))}</p></div>
 		</div>
 		<div class="row"><div class="twelve columns"><h2 class="titre-spectacles">Au programme</h2></div></div>
 		${shows}
@@ -119,12 +154,85 @@ function afficherDetail(soiree) {
 				<div class="contenu-banniere">
 					<div>
 						<strong>Prêt à vivre le concert ?</strong>
-						<p class="texte-discret">${escapeHtml(soiree.places_disponibles)} places restantes · ${escapeHtml(Number(soiree.prix).toFixed(2))} € · ${escapeHtml(soiree.lieu)}</p>
+						<p class="texte-discret">${escapeHtml(placesDisponibles)} places restantes · ${escapeHtml(formatPrix(prix))} · ${escapeHtml(soiree.lieu)}</p>
 					</div>
-					<button class="button button-primary" type="button">Billetterie</button>
+					<div class="actions-billetterie">
+						<label for="quantite-billets">Billets</label>
+						<input id="quantite-billets" type="number" min="1" max="${escapeHtml(placesDisponibles)}" value="1" ${placesDisponibles < 1 ? 'disabled' : ''}>
+						<button class="button button-primary" type="button" data-ajouter-billet
+							data-id-soiree="${escapeHtml(idSoiree)}"
+							data-nom="${escapeHtml(soiree.nom)}"
+							data-date="${escapeHtml(soiree.date)}"
+							data-lieu="${escapeHtml(soiree.lieu)}"
+							data-prix="${escapeHtml(prix)}"
+							data-places="${escapeHtml(placesDisponibles)}"
+							${placesDisponibles < 1 ? 'disabled' : ''}>Ajouter au panier</button>
+						<a class="button button-light" href="/panier.html">Voir le panier</a>
+					</div>
 				</div>
+				<p id="etat-ajout-panier" class="etat-ajout-panier" role="status" aria-live="polite"></p>
 			</div>
 		</div>`;
+}
+
+function afficherPanier() {
+	const content = document.querySelector('#panier-content');
+	const status = document.querySelector('#etat-panier');
+
+	if (!content) {
+		return;
+	}
+
+	try {
+		const panier = lirePanier();
+		const total = panier.reduce((montant, article) => montant + article.prix * article.quantite, 0);
+
+		content.innerHTML = panier.length
+			? panier.map(function (article) {
+				return `
+					<article class="article-panier">
+						<div class="entete-article-panier">
+							<strong>NRV<br>LIVE</strong>
+							<span aria-hidden="true">&#9889;</span>
+						</div>
+						<div class="corps-article-panier">
+							<div class="infos-article-panier">
+								<h2>${escapeHtml(article.nom)}</h2>
+								<p>${escapeHtml(formatDate(article.date))} · ${escapeHtml(article.lieu)}</p>
+								<a href="/">Voir la programmation <span aria-hidden="true">↗</span></a>
+								<button class="bouton-retirer-panier" type="button" data-retirer-panier="${escapeHtml(article.id_soiree)}">Retirer</button>
+							</div>
+							<div class="achat-article-panier">
+								<div class="controle-quantite-panier">
+									<span>Tickets</span>
+									<button type="button" aria-label="Retirer un billet" data-quantite-step="${escapeHtml(article.id_soiree)}" data-delta="-1" ${article.quantite <= 1 ? 'disabled' : ''}>−</button>
+									<input type="number" min="1" max="${escapeHtml(article.places_disponibles)}"
+										value="${escapeHtml(article.quantite)}" aria-label="Quantité de billets pour ${escapeHtml(article.nom)}"
+										data-quantite-panier="${escapeHtml(article.id_soiree)}">
+									<button type="button" aria-label="Ajouter un billet" data-quantite-step="${escapeHtml(article.id_soiree)}" data-delta="1" ${article.quantite >= article.places_disponibles ? 'disabled' : ''}>+</button>
+								</div>
+								<strong class="prix-article-panier">${escapeHtml(formatPrix(article.prix * article.quantite))}</strong>
+							</div>
+						</div>
+					</article>`;
+			}).join('')
+			: `<div class="panneau-vide">
+					<div class="logo-panneau-vide"><span>NRV</span><strong>LIVE</strong><b>⚡</b></div>
+					<h2>Votre panier est vide</h2>
+					<p>Les billets ajoutés depuis la programmation apparaîtront ici.</p>
+					<a class="button button-primary" href="/">Voir le programme</a>
+				</div>`;
+
+		document.querySelector('#total-panier').textContent = formatPrix(total);
+		if (status) {
+			status.textContent = '';
+		}
+	} catch (error) {
+		if (status) {
+			status.textContent = 'Impossible de lire le panier. Vérifiez les paramètres de stockage de votre navigateur.';
+		}
+		console.error(error);
+	}
 }
 
 function remplirFiltres(spectacles) {
@@ -173,6 +281,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 	const filtreDate = document.querySelector('#filtre-date');
 	const filtreGenre = document.querySelector('#filtre-genre');
 	const triProgramme = document.querySelector('#tri-programme');
+	const contenuSoiree = document.querySelector('#soiree-content');
 
 	if (spectacleList && !status) {
 		status = document.createElement('p');
@@ -277,6 +386,133 @@ document.addEventListener('DOMContentLoaded', async function () {
 			}
 			if (programView) {
 				programView.hidden = false;
+			}
+		});
+	}
+
+	if (contenuSoiree) {
+		contenuSoiree.addEventListener('click', function (event) {
+			const button = event.target.closest('[data-ajouter-billet]');
+
+			if (!button) {
+				return;
+			}
+
+			const statusAjout = document.querySelector('#etat-ajout-panier');
+			const input = document.querySelector('#quantite-billets');
+			const quantite = Number(input.value);
+			const placesDisponibles = Number(button.dataset.places);
+
+			if (!Number.isInteger(quantite) || quantite < 1) {
+				statusAjout.textContent = 'Choisissez au moins un billet.';
+				return;
+			}
+
+			try {
+				const panier = lirePanier();
+				const idSoiree = Number(button.dataset.idSoiree);
+				const article = panier.find((item) => item.id_soiree === idSoiree);
+				const dejaDansPanier = article ? article.quantite : 0;
+
+				if (quantite + dejaDansPanier > placesDisponibles) {
+					statusAjout.textContent = `Il ne reste que ${Math.max(0, placesDisponibles - dejaDansPanier)} place(s) disponible(s) pour cette soirée.`;
+					return;
+				}
+
+				if (article) {
+					article.quantite += quantite;
+				} else {
+					panier.push({
+						id_soiree: idSoiree,
+						nom: button.dataset.nom,
+						date: button.dataset.date,
+						lieu: button.dataset.lieu,
+						prix: Number(button.dataset.prix),
+						places_disponibles: placesDisponibles,
+						quantite: quantite
+					});
+				}
+
+				enregistrerPanier(panier);
+				statusAjout.textContent = `${quantite} billet(s) ajouté(s) au panier.`;
+			} catch (error) {
+				statusAjout.textContent = 'Impossible d’enregistrer le panier dans ce navigateur.';
+				console.error(error);
+			}
+		});
+	}
+
+	const contenuPanier = document.querySelector('#panier-content');
+
+	if (contenuPanier) {
+		afficherPanier();
+		contenuPanier.addEventListener('click', function (event) {
+			const stepButton = event.target.closest('[data-quantite-step]');
+
+			if (stepButton) {
+				try {
+					const panier = lirePanier();
+					const idSoiree = Number(stepButton.dataset.quantiteStep);
+					const article = panier.find((item) => item.id_soiree === idSoiree);
+
+					if (article) {
+						const quantite = article.quantite + Number(stepButton.dataset.delta);
+						if (quantite >= 1 && quantite <= article.places_disponibles) {
+							article.quantite = quantite;
+							enregistrerPanier(panier);
+							afficherPanier();
+						}
+					}
+				} catch (error) {
+					document.querySelector('#etat-panier').textContent = 'Impossible de modifier le panier.';
+					console.error(error);
+				}
+				return;
+			}
+
+			const button = event.target.closest('[data-retirer-panier]');
+
+			if (!button) {
+				return;
+			}
+
+			try {
+				const idSoiree = Number(button.dataset.retirerPanier);
+				enregistrerPanier(lirePanier().filter((article) => article.id_soiree !== idSoiree));
+				afficherPanier();
+			} catch (error) {
+				document.querySelector('#etat-panier').textContent = 'Impossible de modifier le panier.';
+				console.error(error);
+			}
+		});
+		contenuPanier.addEventListener('change', function (event) {
+			const input = event.target.closest('[data-quantite-panier]');
+
+			if (!input) {
+				return;
+			}
+
+			const quantite = Number(input.value);
+			const placesDisponibles = Number(input.max);
+
+			if (!Number.isInteger(quantite) || quantite < 1 || quantite > placesDisponibles) {
+				document.querySelector('#etat-panier').textContent = `La quantité doit être comprise entre 1 et ${placesDisponibles}.`;
+				return;
+			}
+
+			try {
+				const idSoiree = Number(input.dataset.quantitePanier);
+				const panier = lirePanier();
+				const article = panier.find((item) => item.id_soiree === idSoiree);
+
+				if (article) {
+					article.quantite = quantite;
+					enregistrerPanier(panier);
+					afficherPanier();
+				}
+			} catch (error) {
+				document.querySelector('#etat-panier').textContent = 'Impossible de modifier le panier.';
+				console.error(error);
 			}
 		});
 	}

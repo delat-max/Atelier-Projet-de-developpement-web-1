@@ -566,6 +566,7 @@ h1
 	align-items: center;
 	justify-content: space-between;
 	gap: 18px;
+	flex-wrap: wrap;
 }
 .contenu-banniere strong
 {
@@ -587,6 +588,38 @@ h1
 	font-size: 8px;
 	line-height: 23px;
 }
+.actions-billetterie
+{
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.actions-billetterie label
+{
+	margin: 0;
+	font-size: 9px;
+}
+.actions-billetterie input
+{
+	width: 58px;
+	height: 25px;
+	margin: 0;
+	padding: 0 5px;
+	border-color: var(--line);
+	background: var(--bg);
+	color: var(--white);
+	font-size: 10px;
+}
+.actions-billetterie .button
+{
+	white-space: nowrap;
+}
+.etat-ajout-panier
+{
+	margin: 8px 0 0;
+	color: var(--white);
+	font-size: 9px;
+}
 .message-vide
 {
 	color: var(--muted);
@@ -599,12 +632,139 @@ h1
 }
 .mise-en-page-panier
 {
-	display: flex;
-	align-items: flex-start;
+	display: block;
 }
 .liste-panier
 {
-	padding-right: 8px;
+	padding: 0;
+}
+#etat-panier
+{
+	color: var(--white);
+	font-size: 10px;
+}
+.article-panier
+{
+	margin-bottom: 16px;
+	overflow: hidden;
+	border-radius: 10px;
+	background: #24262b;
+}
+.entete-article-panier
+{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	min-height: 46px;
+	padding: 7px 12px;
+	background: var(--red);
+}
+.entete-article-panier strong
+{
+	font-size: 13px;
+	line-height: .85;
+}
+.entete-article-panier span
+{
+	color: var(--yellow);
+	font-size: 30px;
+	line-height: 1;
+}
+.corps-article-panier
+{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+	padding: 10px 12px 8px;
+}
+.infos-article-panier h2
+{
+	margin: 0 0 3px;
+	font-size: 11px;
+	line-height: 1.1;
+	text-transform: uppercase;
+}
+.infos-article-panier p
+{
+	margin: 0 0 5px;
+	color: var(--muted);
+	font-size: 8px;
+}
+.infos-article-panier > a
+{
+	color: var(--white);
+	font-size: 8px;
+}
+.bouton-retirer-panier
+{
+	margin-left: 10px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--muted);
+	font-size: 8px;
+	text-decoration: underline;
+}
+.achat-article-panier
+{
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+.controle-quantite-panier
+{
+	display: flex;
+	align-items: center;
+	gap: 3px;
+}
+.controle-quantite-panier > span
+{
+	margin-right: 5px;
+	color: var(--muted);
+	font-size: 8px;
+}
+.controle-quantite-panier button,
+.controle-quantite-panier input
+{
+	width: 23px;
+	height: 23px;
+	margin: 0;
+	padding: 0;
+	border: 1px solid #4f5259;
+	border-radius: 3px;
+	background: #17181b;
+	color: var(--white);
+	font-size: 11px;
+	line-height: 21px;
+	text-align: center;
+}
+.controle-quantite-panier button
+{
+	font-weight: 700;
+}
+.controle-quantite-panier button:disabled
+{
+	color: #666972;
+	cursor: not-allowed;
+}
+.controle-quantite-panier input
+{
+	appearance: textfield;
+	-moz-appearance: textfield;
+}
+.controle-quantite-panier input::-webkit-inner-spin-button,
+.controle-quantite-panier input::-webkit-outer-spin-button
+{
+	margin: 0;
+	-webkit-appearance: none;
+}
+.prix-article-panier
+{
+	min-width: 58px;
+	color: var(--white);
+	font-size: 14px;
+	text-align: right;
 }
 .panneau-vide
 {
@@ -655,33 +815,42 @@ h1
 }
 .resume-panier
 {
-	padding: 10px 0 0 8px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 4px 6px 0 0;
 }
 .resume-panier h2
 {
 	margin: 0 0 12px;
 	font-size: 16px;
 }
-.ligne-resume
+.resume-panier p
 {
-	display: flex;
-	justify-content: space-between;
-	padding: 8px 0;
-	border-bottom: 1px solid #3e4046;
-	font-size: 10px;
+	margin: 0;
+	padding: 5px 0;
+	color: var(--muted);
+	font-size: 14px;
+	line-height: 1.4;
 }
-.ligne-resume strong
+.resume-panier p strong
 {
 	color: var(--white);
 }
+#total-panier
+{
+	font-size: 22px;
+}
 .bouton-payer
 {
-	float: right;
-	margin-top: 10px;
-	height: 29px;
-	padding: 0 14px;
-	font-size: 10px;
-	line-height: 27px;
+	min-width: 104px;
+	height: 42px;
+	margin: 0;
+	padding: 0 20px;
+	font-size: 17px;
+	line-height: 40px;
+	text-transform: uppercase;
 }
 .bouton-payer:disabled
 {
@@ -995,6 +1164,17 @@ h1
 		width: 100%;
 		margin-top: 9px;
 	}
+	.actions-billetterie
+	{
+		flex-wrap: wrap;
+		margin-top: 8px;
+	}
+	.actions-billetterie .button
+	{
+		width: auto;
+		flex: 1 1 auto;
+		margin-top: 0;
+	}
 	.titre-page
 	{
 		font-size: 26px;
@@ -1011,13 +1191,21 @@ h1
 	}
 	.resume-panier
 	{
+		flex-direction: column;
+		align-items: stretch;
 		padding: 0;
 	}
 	.bouton-payer
 	{
-		float: none;
 		width: 100%;
-		margin-top: 9px;
+	}
+	.corps-article-panier
+	{
+		align-items: flex-start;
+	}
+	.achat-article-panier
+	{
+		gap: 8px;
 	}
 	.page-connexion
 	{
