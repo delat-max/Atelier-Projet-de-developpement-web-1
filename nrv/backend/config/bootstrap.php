@@ -17,6 +17,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Factory\AppFactory;
 use Slim\Exception\HttpNotFoundException;
+use App\adapters\http\PanierController;
+use App\adapters\persistence\MySQLPanierRepository;
+use App\application\usecases\GererPanier;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
@@ -50,6 +53,16 @@ $pdo = new PDO(
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false
     ]
+);
+
+$panierRepository = new MySQLPanierRepository($pdo);
+$panierController = new PanierController(new GererPanier($panierRepository));
+
+$registerRoutes(
+    $app,
+    $catalogController,
+    $utilisateurController,
+    $panierController
 );
 
 $catalogRepository = new MySQLCatalogRepository($pdo);

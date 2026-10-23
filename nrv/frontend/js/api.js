@@ -35,4 +35,27 @@ window.NRV_API = {
     getSoiree(id) {
         return this.request(`/api/soirees/${encodeURIComponent(id)}`);
     },
+
+    getPanier() {
+        return this.request('/api/panier');
+    },
+
+    async syncPanier(articles) {
+        const response = await fetch('/api/panier', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+            },
+            body: JSON.stringify({ articles }),
+        });
+
+        if (!response.ok) {
+            const error = new Error(`Erreur API : ${response.status}`);
+            error.status = response.status;
+            throw error;
+        }
+
+        return response.json();
+    },
 };

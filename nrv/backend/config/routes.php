@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 use App\adapters\http\CatalogController;
 use App\adapters\http\UtilisateurController;
+use App\adapters\http\PanierController;
 use Slim\App;
 
 return static function (
     App $app,
     CatalogController $catalogController,
-    UtilisateurController $utilisateurController
+    UtilisateurController $utilisateurController,
+    PanierController $panierController
 ): void {
     $app->get('/api/dates', [$catalogController, 'dates']);
 
@@ -53,5 +55,15 @@ return static function (
     $app->patch(
         '/api/utilisateurs/me/mot-de-passe',
         [$utilisateurController, 'modifierMotDePasse']
+    );
+
+    $app->get(
+        '/api/panier', 
+        [$panierController, 'obtenir']
+    );
+
+    $app->put(
+        '/api/panier', 
+        [$panierController, 'synchroniser']
     );
 };

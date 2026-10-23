@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="/css/normalize.css">
     <link rel="stylesheet" href="/css/skeleton.css">
     <link rel="stylesheet" href="/css/style.css?v=20261022-2">
+    <script src="/js/api.js" defer></script>
+    <script src="/js/main.js?v=20261022-3" defer></script>
     <script src="/js/main.js?v=20261022-2" defer></script>
 </head>
 <body>
@@ -46,6 +48,29 @@
 </header>
 <main class="container cadre-page contenu-page">
     <h1 class="titre-page">Votre Panier</h1>
+    <!-- Ici banderole pass 3j -->
+        <section class="banniere-action-soiree" id="banniere-pass-3j" style="margin-bottom: 2.4rem;">
+            <div class="contenu-banniere">
+                <div>
+                    <p class="surtitre" style="margin-bottom: 0.4rem;">⚡ OFFRE SPÉCIALE FESTIVAL</p>
+                    <h2 style="margin: 0 0 0.5rem 0; font-size: 2.2rem;">Pass 3 Jours NRV</h2>
+                    <p class="texte-discret" style="margin: 0;">
+                        Vivez 3 soirées au choix et bénéficiez de <strong>-3 % de remise immédiate</strong> sur le tarif triple.
+                    </p>
+                </div>
+                <div class="actions-billetterie" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                    <select id="select-soiree-pass" class="u-full-width" style="max-width: 260px; margin-bottom: 0;" aria-label="Choisir la soirée de référence pour le Pass 3 jours">
+                        <option value="1" data-nom="Legendes du hard rock" data-date="2026-11-06" data-lieu="L'Autre Canal, Nancy" data-prix="32" data-places="850">Week-end 1 · Dès le 6 nov. (93,12 €)</option>
+                        <option value="4" data-nom="Metal moderne" data-date="2026-11-13" data-lieu="L'Autre Canal, Nancy" data-prix="35" data-places="850">Week-end 2 · Dès le 13 nov. (101,85 €)</option>
+                        <option value="7" data-nom="Rock des annees 80" data-date="2026-11-20" data-lieu="L'Autre Canal, Nancy" data-prix="30" data-places="850">Week-end 3 · Dès le 20 nov. (87,30 €)</option>
+                        <option value="10" data-nom="Metal francais" data-date="2026-11-27" data-lieu="L'Autre Canal, Nancy" data-prix="34" data-places="850">Week-end 4 · Dès le 27 nov. (98,94 €)</option>
+                    </select>
+                    <button class="button button-primary" type="button" id="btn-ajouter-pass-3j">
+                        + Ajouter le Pass 3 Jours
+                    </button>
+                </div>
+            </div>
+        </section>
     <div class="row mise-en-page-panier">
         <section class="twelve columns liste-panier" aria-label="Articles du panier">
             <p id="etat-panier" role="status" aria-live="polite"></p>
