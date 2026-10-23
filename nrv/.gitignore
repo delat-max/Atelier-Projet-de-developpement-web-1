@@ -1,3 +1,4 @@
 /backend/vendor/
 /.env
 /.DS_Store
+/backend/.phpunit.cache/
