@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Auth;
 use App\CatalogRepository;
+use App\UserRepository;
 use Slim\Factory\AppFactory;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -16,10 +18,13 @@ $pdo = new PDO($db['dsn'], $db['user'], $db['password'], [
 ]);
 
 $app = AppFactory::create();
+$app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 
 $registerRoutes = require __DIR__ . '/routes.php';
-$registerRoutes($app, new CatalogRepository($pdo));
+$users = new UserRepository($pdo);
+$auth = new Auth($settings['auth'], $users);
+$registerRoutes($app, new CatalogRepository($pdo), $users, $auth);
 
 return $app;

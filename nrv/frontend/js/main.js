@@ -283,4 +283,24 @@ document.addEventListener('DOMContentLoaded', async function () {
 			if (programView) programView.hidden = false;
 		});
 	}
+
+	const formConnexion = document.querySelector('#form-connexion');
+	if (formConnexion) {
+		formConnexion.addEventListener('submit', async function (event) {
+			event.preventDefault();
+			const erreur = document.querySelector('#erreur-connexion');
+			erreur.hidden = true;
+
+			try {
+				const result = await window.NRV_API.login(
+					document.querySelector('#profile-email').value,
+					document.querySelector('#profile-password').value
+				);
+				window.location.href = result.data.is_admin ? '/admin.html' : '/profil-connecte.html';
+			} catch (e) {
+				erreur.textContent = e.message;
+				erreur.hidden = false;
+			}
+		});
+	}
 });

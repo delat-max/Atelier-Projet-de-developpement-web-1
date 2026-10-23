@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/normalize.css">
     <link rel="stylesheet" href="/css/skeleton.css">
     <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/api.js" defer></script>
     <script src="/js/main.js" defer></script>
 </head>
 <body>
@@ -46,12 +47,13 @@
 </header>
 <main class="container cadre-page page-connexion">
     <section class="carte-connexion" aria-labelledby="login-title">
-        <form>
+        <form id="form-connexion">
             <label for="profile-email">Email</label>
             <input id="profile-email" class="u-full-width" type="email" placeholder="email">
             <label for="profile-password">Mot de passe</label>
             <input id="profile-password" class="u-full-width" type="password" placeholder="mot de passe">
-            <button class="button bouton-connexion" type="button">Se connecter</button>
+            <p id="erreur-connexion" class="etat-api" role="alert" hidden></p>
+            <button class="button bouton-connexion" type="submit">Se connecter</button>
         </form>
         <a href="#">Mot de passe oublié ?</a>
     </section>

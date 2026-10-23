@@ -13,4 +13,12 @@ return [
         'user' => getenv('DB_USER') ?: 'nrv',
         'password' => getenv('DB_PASSWORD') ?: 'nrv',
     ],
+    'auth' => [
+        'session_name' => 'nrv_session',
+
+        'admin_emails' => array_values(array_filter(array_map(
+            static fn (string $e): string => mb_strtolower(trim($e)),
+            explode(',', getenv('ADMIN_EMAILS') ?: 'admin@nrv.net')
+        ))),
+    ],
 ];

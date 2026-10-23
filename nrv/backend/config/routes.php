@@ -2,12 +2,16 @@
 
 declare(strict_types=1);
 
+use App\Auth;
 use App\CatalogRepository;
+use App\Middleware\RequireAuth;
+use App\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\App;
+use Slim\Routing\RouteCollectorProxy;
 
-return static function (App $app, CatalogRepository $catalog): void {
+return static function (App $app, CatalogRepository $catalog, UserRepository $users, Auth $auth): void {
     $json = static function (
         ResponseInterface $response,
         array $data,
@@ -78,4 +82,56 @@ return static function (App $app, CatalogRepository $catalog): void {
 
         return $json($response, ['data' => $soiree]);
     });
+
+
+    $app->post('/api/register', static function (ServerRequestInterface $request, ResponseInterface $response) use ($users, $auth, $json): ResponseInterface {
+        $body = (array) ($request->getParsedBody() ?? []);
+        $nom = trim((string) ($body['nom'] ?? ''));
+        $prenom = trim((string) ($body['prenom'] ?? ''));
+        $email = mb_strtolower(trim((string) ($body['email'] ?? '')));
+        $password = (string) ($body['password'] ?? '');
+
+        if ($nom === '' || $prenom === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 8) {
+            return $json($response, ['error' => 'Champs invalides (mot de passe : 8 caractères minimum)'], 422);
+        }
+
+        if ($auth->isAdminEmail($email) || $users->findByEmail($email) !== null) {
+            return $json($response, ['error' => 'Cet email ne peut pas être utilisé'], 409);
+        }
+
+        $users->create($nom, $prenom, $email, password_hash($password, PASSWORD_DEFAULT));
+        $user = $auth->attempt($email, $password);
+
+        return $json($response, ['data' => $user], 201);
+    });
+
+    $app->post('/api/login', static function (ServerRequestInterface $request, ResponseInterface $response) use ($auth, $json): ResponseInterface {
+        $body = (array) ($request->getParsedBody() ?? []);
+        $user = $auth->attempt((string) ($body['email'] ?? ''), (string) ($body['password'] ?? ''));
+
+        if ($user === null) {
+            return $json($response, ['error' => 'Email ou mot de passe incorrect'], 401);
+        }
+
+        return $json($response, ['data' => $user]);
+    });
+
+    $app->post('/api/logout', static function (ServerRequestInterface $request, ResponseInterface $response) use ($auth, $json): ResponseInterface {
+        $auth->logout();
+
+        return $json($response, ['data' => ['logged_out' => true]]);
+    });
+
+    $app->get('/api/me', static function (ServerRequestInterface $request, ResponseInterface $response) use ($json): ResponseInterface {
+        return $json($response, ['data' => $request->getAttribute('user')]);
+    })->add(new RequireAuth($auth));
+
+
+    // 401 si non connecté, 403 si non admin.
+    $app->group('/api/admin', function (RouteCollectorProxy $group) use ($json): void {
+        $group->get('/ping', static function (ServerRequestInterface $request, ResponseInterface $response) use ($json): ResponseInterface {
+            return $json($response, ['data' => ['admin' => true, 'user' => $request->getAttribute('user')]]);
+        });
+
+    })->add(new RequireAuth($auth, true));
 };
