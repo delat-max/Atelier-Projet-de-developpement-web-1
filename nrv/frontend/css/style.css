@@ -969,6 +969,92 @@ h1
 {
 	display: none !important;
 }
+select,
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="number"] {
+    max-width: 100%;
+    border: 1px solid #555861;
+    border-radius: 5px;
+    background-color: #1d1f23;
+    color: var(--white);
+    box-shadow: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+select {
+    min-height: 40px;
+    padding: 0 38px 0 12px;
+    color-scheme: dark;
+    cursor: pointer;
+}
+
+select option {
+    background: #1d1f23;
+    color: var(--white);
+}
+
+/* Mise en évidence au survol */
+select:hover,
+input[type="text"]:hover,
+input[type="search"]:hover,
+input[type="email"]:hover,
+input[type="password"]:hover,
+input[type="number"]:hover {
+    border-color: #858891;
+}
+select:focus,
+input[type="text"]:focus,
+input[type="search"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="checkbox"]:focus-visible 
+{
+    border-color: var(--yellow);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 210, 28, .18);
+}
+input[type="checkbox"] 
+{
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    margin: 0;
+    accent-color: var(--red);
+    cursor: pointer;
+}
+.option-tarif-reduit 
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin: 10px 0 12px;
+    color: var(--white);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+    cursor: pointer;
+}
+.option-tarif-reduit span 
+{
+    display: inline-block;
+}
+.filtres-programme label 
+{
+    display: block;
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+.filtres-programme select 
+{
+    width: 100%;
+}
+
 @media (max-width:749px)
 {
 	body
@@ -1241,6 +1327,16 @@ h1
 	{
 		font-size: 15px;
 	}
+	.option-tarif-reduit 
+	{
+        align-items: flex-start;
+        max-width: 100%;
+    }
+    #select-soiree-pass 
+	{
+        width: 100%;
+        max-width: 100% !important;
+    }
 }
 @media (min-width:750px)
 {

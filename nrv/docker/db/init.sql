@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS `panier` (
     `id_panier` INT AUTO_INCREMENT PRIMARY KEY,
     `id_commande` INT NOT NULL,
     `id_soiree` INT NOT NULL,
-    `type_tarif` ENUM('normal', 'reduit', 'pass_3_jours') NOT NULL,
+    `type_tarif` ENUM('normal', 'reduit', 'pass_3_jours', 'pass_3_jours_reduit') NOT NULL,
     `quantite` INT NOT NULL DEFAULT 1,
     FOREIGN KEY (`id_commande`) REFERENCES `commande`(`id_commande`) ON DELETE CASCADE,
     FOREIGN KEY (`id_soiree`) REFERENCES `soiree`(`id_soiree`) ON DELETE CASCADE

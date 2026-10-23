@@ -46,9 +46,19 @@ function calculerPrixUnitaire(prixBase, typeTarif) {
     if (typeTarif === 'reduit') {
         return Math.round(prixBase * TAUX_REDUIT * 100) / 100;
     }
-    if (typeTarif === 'pass_3_jours') {
-        return Math.round(prixBase * MULTIPLICATEUR_PASS_3J * 100) / 100;
+
+    if (
+        typeTarif === 'pass_3_jours' ||
+        typeTarif === 'pass_3_jours_reduit'
+    ) {
+        const tauxTarif =
+            typeTarif === 'pass_3_jours_reduit' ? TAUX_REDUIT : 1;
+
+        return Math.round(
+            prixBase * MULTIPLICATEUR_PASS_3J * tauxTarif * 100
+        ) / 100;
     }
+
     return Math.round(prixBase * 100) / 100;
 }
 
@@ -69,7 +79,12 @@ function lirePanier() {
     }
 
     return panier.map(function (article) {
-        const typeTarif = ['normal', 'reduit', 'pass_3_jours'].includes(article.type_tarif)
+        const typeTarif = [
+            'normal',
+            'reduit',
+            'pass_3_jours',
+            'pass_3_jours_reduit'
+        ].includes(article.type_tarif)
             ? article.type_tarif
             : 'normal';
         const prixBase = Number.isFinite(article.prix_base) ? article.prix_base : article.prix;
@@ -245,8 +260,13 @@ function afficherPanier() {
 
         content.innerHTML = panier.length
             ? panier.map(function (article, index) {
-                const estPass3J = article.type_tarif === 'pass_3_jours';
-                const estReduit = article.type_tarif === 'reduit';
+                const estPass3J =
+                    article.type_tarif === 'pass_3_jours' ||
+                    article.type_tarif === 'pass_3_jours_reduit';
+
+                const estReduit =
+                    article.type_tarif === 'reduit' ||
+                    article.type_tarif === 'pass_3_jours_reduit';
 
                 return `
                     <article class="article-panier">
@@ -260,10 +280,14 @@ function afficherPanier() {
                                 <p>${escapeHtml(formatDate(article.date))} · ${escapeHtml(article.lieu)}</p>
                                 ${estPass3J
                                     ? '<p class="texte-discret"><strong>Pass 3 Jours</strong> (Remise de 3 % incluse)</p>'
-                                    : `<label class="option-tarif-reduit" style="display: inline-flex; align-items: center; gap: 0.6rem; margin: 0.6rem 0; cursor: pointer;">
-                                        <input type="checkbox" data-toggle-reduit="${index}" ${estReduit ? 'checked' : ''}>
-                                        <span>Tarif réduit (-20 % · ${escapeHtml(formatPrix(article.prix))} / unité)</span>
-                                    </label>`}
+                                    : ''}
+
+                                <label class="option-tarif-reduit">
+                                    <input type="checkbox" data-toggle-reduit="${index}" ${estReduit ? 'checked' : ''}>
+                                    <span>
+                                        Tarif réduit (-20 %${estPass3J ? ', en plus des 3 % du pass' : ''})
+                                    </span>
+                                </label>
                                 <div>
                                     <a href="/">Voir la programmation <span aria-hidden="true">↗</span></a>
                                     <button class="bouton-retirer-panier" type="button" data-retirer-panier="${index}">Retirer</button>
@@ -331,7 +355,7 @@ async function initFiltres() {
             });
         }
     } catch (e) {
-        console.error('Erreur lors du chargement des filtres.');
+        console.error('Erreur lors du chargement des filtres :', e);
     }
 }
 
@@ -679,46 +703,39 @@ document.addEventListener('DOMContentLoaded', async function () {
                     const panier = lirePanier();
                     const article = panier[index];
 
-                    if (article && article.type_tarif !== 'pass_3_jours') {
-                        article.type_tarif = checkboxReduit.checked ? 'reduit' : 'normal';
-                        article.prix = calculerPrixUnitaire(article.prix_base, article.type_tarif);
+                    if (article) {
+                        const estPass3J =
+                            article.type_tarif === 'pass_3_jours' ||
+                            article.type_tarif === 'pass_3_jours_reduit';
+
+                        article.type_tarif = estPass3J
+                            ? (
+                                checkboxReduit.checked
+                                    ? 'pass_3_jours_reduit'
+                                    : 'pass_3_jours'
+                            )
+                            : (
+                                checkboxReduit.checked
+                                    ? 'reduit'
+                                    : 'normal'
+                            );
+
+                        article.prix = calculerPrixUnitaire(
+                            article.prix_base,
+                            article.type_tarif
+                        );
+
                         enregistrerPanier(panier);
                         afficherPanier();
                     }
                 } catch (error) {
-                    document.querySelector('#etat-panier').textContent = 'Impossible de modifier le panier.';
+                    document.querySelector('#etat-panier').textContent =
+                        'Impossible de modifier le panier.';
+
                     console.error(error);
                 }
+
                 return;
-            }
-
-            const input = event.target.closest('[data-quantite-panier]');
-
-            if (!input) {
-                return;
-            }
-
-            const quantite = Number(input.value);
-            const placesDisponibles = Number(input.max);
-
-            if (!Number.isInteger(quantite) || quantite < 1 || quantite > placesDisponibles) {
-                document.querySelector('#etat-panier').textContent = `La quantité doit être comprise entre 1 et ${placesDisponibles}.`;
-                return;
-            }
-
-            try {
-                const index = Number(input.dataset.quantitePanier);
-                const panier = lirePanier();
-                const article = panier[index];
-
-                if (article) {
-                    article.quantite = quantite;
-                    enregistrerPanier(panier);
-                    afficherPanier();
-                }
-            } catch (error) {
-                document.querySelector('#etat-panier').textContent = 'Impossible de modifier le panier.';
-                console.error(error);
             }
         });
     }

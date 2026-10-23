@@ -59,7 +59,11 @@ final class MySQLPanierRepository implements PanierRepositoryInterface
             $articles[] = [
                 'id_panier' => (int) $row['id_panier'],
                 'id_soiree' => (int) $row['id_soiree'],
-                'nom' => $row['type_tarif'] === 'pass_3_jours'
+                'nom' => in_array(
+                    $row['type_tarif'],
+                    ['pass_3_jours', 'pass_3_jours_reduit'],
+                    true
+                )
                     ? 'Pass 3 Jours — ' . $row['nom']
                     : $row['nom'],
                 'date' => $row['date'],
@@ -175,11 +179,14 @@ final class MySQLPanierRepository implements PanierRepositoryInterface
         return $this->obtenirPanierEnCours($idUtilisateur);
     }
 
-    private function calculerPrixUnitaire(float $prixBase, string $typeTarif): float
-    {
+    private function calculerPrixUnitaire(float $prixBase, string $typeTarif): float {
         return match ($typeTarif) {
             'reduit' => round($prixBase * self::TAUX_REDUIT, 2),
+
             'pass_3_jours' => round($prixBase * self::MULTIPLICATEUR_PASS_3J, 2),
+
+            'pass_3_jours_reduit' => round($prixBase * self::MULTIPLICATEUR_PASS_3J * self::TAUX_REDUIT, 2),
+
             default => round($prixBase, 2),
         };
     }

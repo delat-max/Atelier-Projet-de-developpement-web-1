@@ -58,13 +58,6 @@ $pdo = new PDO(
 $panierRepository = new MySQLPanierRepository($pdo);
 $panierController = new PanierController(new GererPanier($panierRepository));
 
-$registerRoutes(
-    $app,
-    $catalogController,
-    $utilisateurController,
-    $panierController
-);
-
 $catalogRepository = new MySQLCatalogRepository($pdo);
 
 $listerSpectacles = new ListerSpectacles($catalogRepository);
@@ -149,7 +142,8 @@ $registerRoutes = require __DIR__ . '/routes.php';
 $registerRoutes(
     $app,
     $catalogController,
-    $utilisateurController
+    $utilisateurController,
+    $panierController
 );
 
 return $app;

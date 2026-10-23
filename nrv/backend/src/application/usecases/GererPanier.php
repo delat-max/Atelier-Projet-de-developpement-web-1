@@ -35,7 +35,7 @@ final class GererPanier implements GererPanierInterface
             if (
                 $idSoiree === false || $idSoiree < 1 ||
                 $quantite === false || $quantite < 1 ||
-                !in_array($typeTarif, ['normal', 'reduit', 'pass_3_jours'], true)
+                !in_array($typeTarif, ['normal', 'reduit', 'pass_3_jours', 'pass_3_jours_reduit'], true)
             ) {
                 throw new DomainException('article_invalide');
             }
