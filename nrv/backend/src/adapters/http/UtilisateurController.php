@@ -41,6 +41,14 @@ final class UtilisateurController
             }
         }
 
+        if ($this->emailAdminReserve($body['email'])) {
+            return $this->json(
+                $response,
+                ['error' => 'Cette adresse email est réservée'],
+                409
+            );
+        }
+
         try {
             $id = $this->inscrire->execute(
                 $body['nom'],
@@ -207,6 +215,23 @@ final class UtilisateurController
             }
         }
 
+        $profilActuel = $this->obtenirProfil->execute($id);
+        $emailActuel = mb_strtolower(
+            trim((string) ($profilActuel['email'] ?? ''))
+        );
+        $emailDemande = mb_strtolower(trim($body['email']));
+
+        if (
+            $this->emailAdminReserve($emailDemande) &&
+            $emailDemande !== $emailActuel
+        ) {
+            return $this->json(
+                $response,
+                ['error' => 'Cette adresse email est réservée'],
+                409
+            );
+        }
+
         try {
             $this->modifierProfil->execute(
                 $id,
@@ -328,5 +353,23 @@ final class UtilisateurController
             ->withHeader('Content-Type', 'application/json; charset=utf-8')
             ->withHeader('Cache-Control', 'no-store')
             ->withHeader('X-Content-Type-Options', 'nosniff');
+    }
+
+    private function emailAdminReserve(string $email): bool
+    {
+        $emails = array_values(array_filter(array_map(
+            static fn (string $value): string =>
+                mb_strtolower(trim($value)),
+            explode(
+                ',',
+                getenv('ADMIN_EMAILS') ?: 'admin@nrv.net'
+            )
+        )));
+
+        return in_array(
+            mb_strtolower(trim($email)),
+            $emails,
+            true
+        );
     }
 }

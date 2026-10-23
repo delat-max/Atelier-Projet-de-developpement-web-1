@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/css/style.css">
     <script src="/js/main.js" defer></script>
     <script src="/js/auth.js" defer></script>
+    <script src="/js/role-ui.js" defer></script>
 </head>
 <body>
 <header class="entete-site">
@@ -50,7 +51,19 @@
 
 <main class="container cadre-page page-profil">
     <p id="auth-message" role="status" aria-live="polite"></p>
-
+    
+    <section id="admin-access" class="bloc-administration" hidden>
+        <hr>
+        <h2>Espace administrateur</h2>
+        <p>
+            Gère la programmation et consulte les chiffres de NRV.net
+            depuis le back-office.
+        </p>
+        <a class="button button-primary" href="/admin.html">
+            Ouvrir le back-office ↗
+        </a>
+    </section>
+    
     <section id="profile-content" hidden>
         <div class="entete-profil">
             <div id="profile-avatar" class="avatar-profil" aria-hidden="true"></div>

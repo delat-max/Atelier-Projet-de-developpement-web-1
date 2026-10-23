@@ -172,6 +172,35 @@
             afficherMessage(error.message, true);
         }
 
+        let estAdmin = false;
+
+        try {
+            await request('/api/admin/me');
+            estAdmin = true;
+        } catch (errorAdmin) {
+            if (![401, 403].includes(errorAdmin.status)) {
+                console.warn(
+                    'Vérification du rôle administrateur impossible.',
+                    errorAdmin
+                );
+            }
+        }
+
+        const accesAdmin = document.querySelector('#admin-access');
+        const sectionBillets = document.querySelector('#mes-billets-section');
+
+        if (estAdmin) {
+            if (accesAdmin) {
+                accesAdmin.hidden = false;
+            }
+
+            if (sectionBillets) {
+                sectionBillets.hidden = true;
+            }
+        } else {
+            chargerMesBillets();
+        }
+
         initialiserModificationProfil();
         initialiserModificationMotDePasse();
         initialiserDeconnexion();

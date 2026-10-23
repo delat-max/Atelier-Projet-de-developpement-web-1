@@ -72,16 +72,19 @@ final class MySQLCatalogRepository implements CatalogRepositoryInterface
     private function findSpectacles(?int $idSoiree = null, ?string $date = null, ?string $genre = null, ?string $tri = null): array
     {
         $sql = 'SELECT spectacle.id_spectacle, spectacle.id_soiree, spectacle.titre,
-                       spectacle.description, spectacle.genre, spectacle.image, spectacle.video,
-                       spectacle.creneau AS horaire, soiree.nom AS soiree_nom,
-                       soiree.`date` AS date_soiree, soiree.lieu,
-                       artiste.id_artiste, artiste.nom AS artiste_nom
-                FROM spectacle
-                INNER JOIN soiree ON soiree.id_soiree = spectacle.id_soiree
-                LEFT JOIN spectacle_artiste
-                    ON spectacle_artiste.id_spectacle = spectacle.id_spectacle
-                LEFT JOIN artiste ON artiste.id_artiste = spectacle_artiste.id_artiste';
-
+                    spectacle.description, spectacle.genre, spectacle.image, spectacle.video,
+                    spectacle.creneau AS horaire, soiree.nom AS soiree_nom,
+                    soiree.`date` AS date_soiree, soiree.lieu,
+                    artiste.id_artiste,
+                    artiste.nom AS artiste_nom,
+                    artiste.information AS artiste_information,
+                    artiste.genre AS artiste_genre
+            FROM spectacle
+            INNER JOIN soiree ON soiree.id_soiree = spectacle.id_soiree
+            LEFT JOIN spectacle_artiste
+                ON spectacle_artiste.id_spectacle = spectacle.id_spectacle
+            LEFT JOIN artiste ON artiste.id_artiste = spectacle_artiste.id_artiste';
+            
         $conditions = [];
         $parameters = [];
 
@@ -137,6 +140,8 @@ final class MySQLCatalogRepository implements CatalogRepositoryInterface
                 $spectacles[$id]['artistes'][] = [
                     'id_artiste' => (int) $row['id_artiste'],
                     'nom' => $row['artiste_nom'],
+                    'information' => $row['artiste_information'],
+                    'genre' => $row['artiste_genre'],
                 ];
             }
         }

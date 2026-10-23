@@ -136,11 +136,36 @@ function formatPrix(prix) {
     }).format(prix);
 }
 
+
+function afficherLienArtiste(artist) {
+    return `<span class="nom-artiste">${escapeHtml(artist.nom)}</span>`;
+}
+
+
+function boutonTitreSpectacle(spectacle, classe = 'titre-spectacle') {
+    const artiste = spectacle.artistes?.[0] || {};
+
+    return `
+        <button
+            type="button"
+            class="${classe} lien-fiche-spectacle"
+            data-spectacle-titre="${escapeHtml(spectacle.titre)}"
+            data-spectacle-genre="${escapeHtml(spectacle.genre || '')}"
+            data-spectacle-description="${escapeHtml(spectacle.description || '')}"
+            data-artiste-nom="${escapeHtml(artiste.nom || '')}"
+            data-artiste-genre="${escapeHtml(artiste.genre || '')}"
+            data-artiste-information="${escapeHtml(artiste.information || '')}"
+            aria-haspopup="dialog"
+        >${escapeHtml(spectacle.titre)}</button>
+    `;
+}
+
+
+
 function afficherCarte(spectacle) {
     const imageUrl = getImageUrl(spectacle.image);
-    const artistes = spectacle.artistes.map(function (artist) {
-        return escapeHtml(artist.nom);
-    }).join(', ');
+    const videoUrl = getImageUrl(spectacle.video);
+    const artiste = spectacle.artistes?.[0];
 
     return `
         <article class="four columns carte-spectacle">
@@ -148,22 +173,52 @@ function afficherCarte(spectacle) {
                 <span>NRV<br>LIVE</span>
                 <span class="eclair-logo" aria-hidden="true">&#9889;</span>
             </div>
-            <div class="image-carte-spectacle">
-                ${imageUrl
-                    ? `<img class="u-max-full-width image-spectacle" width="320" height="180" src="${escapeHtml(imageUrl)}" alt="Affiche de ${escapeHtml(spectacle.titre)}" loading="lazy">`
-                    : '<div class="image-spectacle-absente" aria-hidden="true">NRV</div>'}
-            </div>
+
+            ${imageUrl ? `
+                <div class="image-carte-spectacle">
+                    <img
+                        src="${escapeHtml(imageUrl)}"
+                        alt="Visuel de ${escapeHtml(spectacle.titre)}"
+                        loading="lazy"
+                    >
+                </div>
+            ` : ''}
+
             <div class="contenu-carte-spectacle">
-                <p class="surtitre">${escapeHtml(spectacle.genre)}</p>
-                <h2 class="titre-spectacle">${escapeHtml(spectacle.titre)}</h2>
-                <p class="artistes-spectacle">${artistes || 'Artiste à annoncer'}</p>
-                <p class="date-spectacle">${escapeHtml(formatDate(spectacle.date))} · ${escapeHtml(spectacle.horaire)}</p>
-                <button class="button button-primary" type="button" data-soiree-id="${spectacle.id_soiree}">
-                    Voir la soirée
-                </button>
+                <p class="surtitre">${escapeHtml(spectacle.genre || '')}</p>
+
+                ${boutonTitreSpectacle(spectacle)}
+
+                <p class="artistes-spectacle">
+                    ${escapeHtml(artiste?.nom || 'Artiste à annoncer')}
+                </p>
+
+                <p class="date-spectacle">
+                    ${escapeHtml(formatDate(spectacle.date))}
+                    · ${escapeHtml(spectacle.horaire)}
+                </p>
+
+                <div class="liens-media-spectacle">
+                    ${videoUrl ? `
+                        <a
+                            class="lien-video-spectacle"
+                            href="${escapeHtml(videoUrl)}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >▶ Voir la vidéo</a>
+                    ` : ''}
+
+                    <button
+                        class="button button-primary"
+                        type="button"
+                        data-soiree-id="${escapeHtml(spectacle.id_soiree)}"
+                    >Voir la soirée</button>
+                </div>
             </div>
         </article>`;
 }
+
+
 
 function afficherListe(spectacles) {
     let html = '';
@@ -186,14 +241,26 @@ function afficherDetail(soiree) {
         ? soiree.spectacles.map(function (show) {
             return `
                 <article class="row ligne-spectacle">
-                    <time class="two columns horaire-spectacle">${escapeHtml(show.horaire)}</time>
+                    <time class="two columns horaire-spectacle">
+                        ${escapeHtml(show.horaire)}
+                    </time>
+
                     <div class="ten columns description-spectacle">
-                        <h3>${escapeHtml(show.titre)}</h3>
-                        <p>${show.artistes.map(function (artist) {
-                            return escapeHtml(artist.nom);
-                        }).join(', ') || 'Artiste à annoncer'}</p>
-                        <p>${escapeHtml(show.genre)}${show.description ? ` · ${escapeHtml(show.description)}` : ''}</p>
-                        ${show.video ? `<a href="${escapeHtml(getImageUrl(show.video) || '#')}" target="_blank" rel="noreferrer">Voir des vidéos</a>` : ''}
+                        ${boutonTitreSpectacle(
+                            show,
+                            'titre-spectacle titre-spectacle-detail'
+                        )}
+
+                        <p class="artistes-spectacle">
+                            ${escapeHtml(show.artistes?.[0]?.nom || 'Artiste à annoncer')}
+                        </p>
+
+                        <p>
+                            ${escapeHtml(show.genre || '')}
+                            ${show.description
+                                ? ` · ${escapeHtml(show.description)}`
+                                : ''}
+                        </p>
                     </div>
                 </article>`;
         }).join('')
@@ -361,6 +428,56 @@ async function initFiltres() {
 
 
 document.addEventListener('DOMContentLoaded', async function () {
+    
+    const ficheArtiste = document.querySelector('#fiche-artiste');
+
+    if (ficheArtiste) {
+        const fermerFiche = document.querySelector('#fermer-fiche-artiste');
+        const contenuFiche = document.querySelector('#fiche-artiste-contenu');
+        const titreFiche = document.querySelector('#fiche-artiste-titre');
+
+        document.addEventListener('click', function (event) {
+            const bouton = event.target.closest('.lien-fiche-spectacle');
+            if (!bouton) return;
+
+            const titre = bouton.dataset.spectacleTitre || 'Spectacle';
+            const genre = bouton.dataset.spectacleGenre || '';
+            const description = bouton.dataset.spectacleDescription || '';
+            const artisteNom = bouton.dataset.artisteNom || 'Artiste à annoncer';
+            const artisteGenre = bouton.dataset.artisteGenre || '';
+            const artisteInformation = bouton.dataset.artisteInformation || '';
+
+            titreFiche.textContent = artisteNom;
+
+            contenuFiche.innerHTML = `
+                <p class="surtitre">${escapeHtml(genre)}</p>
+                <h2>${escapeHtml(titre)}</h2>
+
+                ${artisteGenre
+                    ? `<p class="genre-fiche-artiste">${escapeHtml(artisteGenre)}</p>`
+                    : ''}
+
+                ${artisteInformation
+                    ? `<p>${escapeHtml(artisteInformation)}</p>`
+                    : '<p class="texte-discret">Aucune information supplémentaire sur cet artiste pour le moment.</p>'}
+
+                ${description
+                    ? `<p class="description-fiche-spectacle">${escapeHtml(description)}</p>`
+                    : ''}
+            `;
+
+            ficheArtiste.showModal();
+        });
+
+        fermerFiche.addEventListener('click', () => ficheArtiste.close());
+
+        ficheArtiste.addEventListener('click', event => {
+            if (event.target === ficheArtiste) {
+                ficheArtiste.close();
+            }
+        });
+    }
+
     const menuToggle = document.querySelector('.bouton-menu-mobile');
     const mobileDrawer = document.querySelector('.menu-mobile');
 
@@ -437,29 +554,119 @@ document.addEventListener('DOMContentLoaded', async function () {
                 window.scrollTo({ top: spectacleList.offsetTop - 20, behavior: 'smooth' });
             });
         }
-
+        
         const chargerSpectaclesFiltres = async function (page = 1) {
             if (status) {
                 status.hidden = false;
                 status.textContent = 'Chargement…';
             }
 
+            const champRecherche = document.querySelector('#site-search')
+                || document.querySelector('#mobile-search');
+
+            const recherche = (champRecherche?.value || '')
+                .trim()
+                .toLocaleLowerCase('fr');
+
+            const options = {
+                date: filtreDate ? filtreDate.value : '',
+                genre: filtreGenre ? filtreGenre.value : '',
+                tri: triProgramme ? triProgramme.value : 'date-croissante'
+            };
+
             try {
-                const result = await window.NRV_API.getSpectacles({
-                    date: filtreDate ? filtreDate.value : '',
-                    genre: filtreGenre ? filtreGenre.value : '',
-                    tri: triProgramme ? triProgramme.value : 'date-croissante',
-                    page: page
+                const premierResultat = await window.NRV_API.getSpectacles({
+                    ...options,
+                    page: recherche ? 1 : page
                 });
-                afficherResultats(result.data);
-                afficherPagination(result.meta);
-            } catch {
+
+                let spectacles = premierResultat.data || [];
+
+                if (recherche) {
+                    const totalPages = premierResultat.meta?.total_pages || 1;
+
+                    if (totalPages > 1) {
+                        const autresPages = await Promise.all(
+                            Array.from(
+                                { length: totalPages - 1 },
+                                (_, index) => window.NRV_API.getSpectacles({
+                                    ...options,
+                                    page: index + 2
+                                })
+                            )
+                        );
+
+                        autresPages.forEach(resultat => {
+                            spectacles.push(...(resultat.data || []));
+                        });
+                    }
+
+                    const normaliser = valeur => String(valeur || '')
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .toLocaleLowerCase('fr');
+
+                    spectacles = spectacles.filter(spectacle => {
+                        const informations = [
+                            spectacle.titre,
+                            spectacle.description,
+                            spectacle.genre,
+                            spectacle.soiree_nom,
+                            spectacle.lieu,
+                            ...(spectacle.artistes || []).map(artiste => artiste.nom)
+                        ];
+
+                        return informations.some(info =>
+                            normaliser(info).includes(normaliser(recherche))
+                        );
+                    });
+
+                    afficherResultats(spectacles);
+                    afficherPagination(null);
+                } else {
+                    afficherResultats(spectacles);
+                    afficherPagination(premierResultat.meta);
+                }
+            } catch (erreur) {
+                console.error('Erreur de recherche :', erreur);
+
                 if (status) {
                     status.hidden = false;
-                    status.textContent = 'Impossible de charger les spectacles filtrés.';
+                    status.textContent =
+                        'Impossible de charger les spectacles. Réessaie dans un instant.';
                 }
             }
         };
+
+        const champsRecherche = [
+            ...document.querySelectorAll('#site-search, #mobile-search')
+        ];
+
+        let temporisateurRecherche;
+
+        champsRecherche.forEach(champ => {
+            champ.addEventListener('input', function () {
+                champsRecherche.forEach(autreChamp => {
+                    if (autreChamp !== champ) {
+                        autreChamp.value = champ.value;
+                    }
+                });
+
+                clearTimeout(temporisateurRecherche);
+
+                temporisateurRecherche = setTimeout(() => {
+                    chargerSpectaclesFiltres(1);
+                }, 300);
+            });
+
+            champ.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    clearTimeout(temporisateurRecherche);
+                    chargerSpectaclesFiltres(1);
+                }
+            });
+        });
 
         await initFiltres();
         try {

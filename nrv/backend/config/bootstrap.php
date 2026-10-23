@@ -23,6 +23,7 @@ use Slim\Factory\AppFactory;
 use Slim\Exception\HttpNotFoundException;
 use App\adapters\http\PanierController;
 use App\adapters\http\BilletController;
+use App\adapters\http\AdminController;
 use App\adapters\persistence\MySQLPanierRepository;
 use App\application\usecases\GererPanier;
 
@@ -59,6 +60,8 @@ $pdo = new PDO(
         PDO::ATTR_EMULATE_PREPARES => false
     ]
 );
+
+$adminController = new AdminController($pdo);
 
 $panierRepository = new MySQLPanierRepository($pdo);
 $panierController = new PanierController(new GererPanier($panierRepository));
@@ -167,7 +170,10 @@ $registerRoutes(
     $utilisateurController,
     $panierController,
     $commandeController,
-    $billetController
+    $billetController,
+    $adminController,
+    $pdo,
+    $settings['auth']['admin_emails']
 );
 
 return $app;

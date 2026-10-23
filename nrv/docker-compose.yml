@@ -10,6 +10,7 @@ services:
       DB_NAME: nrv_db
       DB_USER: nrv
       DB_PASSWORD: nrv
+      ADMIN_EMAILS: admin@nrv.net
     depends_on:
       db:
         condition: service_healthy

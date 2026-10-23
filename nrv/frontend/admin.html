@@ -1,0 +1,265 @@
+
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Administration — NRV.net</title>
+
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/style.css">
+
+    <script src="/js/admin.js" defer></script>
+</head>
+
+<body>
+    <header class="entete-site">
+        <div class="container contenu-entete">
+            <div class="row ligne-entete">
+                <div class="six columns colonne-logo">
+                    <a class="lien-logo" href="/">
+                        <span class="eclair-logo">⚡</span>NRV<span class="point-logo">.net</span>
+                    </a>
+                </div>
+
+                <div class="six columns" style="text-align: right;">
+                    <a class="button button-light" href="/">
+                        Retour au site
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container cadre-page">
+
+        <section>
+            <p class="surtitre">NRV.net · Administration</p>
+            <h1>Back-office</h1>
+            <p>
+                Gère la programmation du festival et suis les ventes
+                de billets depuis cet espace.
+            </p>
+
+            <p id="admin-message" role="status" aria-live="polite"></p>
+        </section>
+
+        <hr>
+
+        <section>
+            <p class="surtitre">Vue d'ensemble</p>
+            <h2>Tableau de bord</h2>
+
+            <div class="row">
+                <div class="four columns">
+                    <div class="panneau-commande">
+                        <p>Soirées programmées</p>
+                        <h2 id="stat-soirees">—</h2>
+                    </div>
+                </div>
+
+                <div class="four columns">
+                    <div class="panneau-commande">
+                        <p>Spectacles programmés</p>
+                        <h2 id="stat-spectacles">—</h2>
+                    </div>
+                </div>
+
+                <div class="four columns">
+                    <div class="panneau-commande">
+                        <p>Billets vendus</p>
+                        <h2 id="stat-billets">—</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="six columns">
+                    <div class="panneau-commande">
+                        <p>Commandes payées</p>
+                        <h2 id="stat-commandes">—</h2>
+                    </div>
+                </div>
+
+                <div class="six columns">
+                    <div class="panneau-commande">
+                        <p>Recettes totales encaissées</p>
+                        <h2 id="stat-revenu">—</h2>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr>
+
+        <section>
+            <p class="surtitre">Programmation</p>
+            <h2>Créer une soirée</h2>
+
+            <div class="panneau-commande">
+                <p>
+                    Renseigne les informations nécessaires pour ajouter
+                    une soirée au festival.
+                </p>
+
+                <form id="form-soiree">
+                    <label for="soiree-nom">Nom de la soirée</label>
+                    <input
+                        class="u-full-width"
+                        id="soiree-nom"
+                        name="nom"
+                        type="text"
+                        maxlength="100"
+                        required
+                    >
+
+                    <label for="soiree-thematique">Thématique</label>
+                    <input
+                        class="u-full-width"
+                        id="soiree-thematique"
+                        name="thematique"
+                        type="text"
+                        maxlength="100"
+                    >
+
+                    <div class="row">
+                        <div class="six columns">
+                            <label for="soiree-date">Date</label>
+                            <input
+                                class="u-full-width"
+                                id="soiree-date"
+                                name="date"
+                                type="date"
+                                required
+                            >
+                        </div>
+
+                        <div class="six columns">
+                            <label for="soiree-heure">Heure de début</label>
+                            <input
+                                class="u-full-width"
+                                id="soiree-heure"
+                                name="horaire_debut"
+                                type="time"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <label for="soiree-lieu">Lieu</label>
+                    <input
+                        class="u-full-width"
+                        id="soiree-lieu"
+                        name="lieu"
+                        type="text"
+                        maxlength="100"
+                        required
+                    >
+
+                    <div class="row">
+                        <div class="six columns">
+                            <label for="soiree-places">Nombre de places</label>
+                            <input
+                                class="u-full-width"
+                                id="soiree-places"
+                                name="places_disponibles"
+                                type="number"
+                                min="1"
+                                step="1"
+                                required
+                            >
+                        </div>
+
+                        <div class="six columns">
+                            <label for="soiree-prix">Prix de base (€)</label>
+                            <input
+                                class="u-full-width"
+                                id="soiree-prix"
+                                name="prix"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <button class="button button-primary" type="submit">
+                        Créer la soirée
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <hr>
+
+        <section>
+            <p class="surtitre">Programmation</p>
+            <h2>Ajouter un spectacle</h2>
+
+            <div class="panneau-commande">
+                <p>
+                    Sélectionne une soirée et un artiste déjà enregistré,
+                    puis indique son heure de passage. Chaque soirée
+                    peut accueillir au maximum trois spectacles.
+                </p>
+
+                <form id="form-spectacle">
+                    <label for="spectacle-soiree">Soirée</label>
+                    <select
+                        class="u-full-width"
+                        id="spectacle-soiree"
+                        name="id_soiree"
+                        required
+                    >
+                        <option value="">Chargement…</option>
+                    </select>
+
+                    <label for="spectacle-artiste">Artiste</label>
+                    <select
+                        class="u-full-width"
+                        id="spectacle-artiste"
+                        name="id_artiste"
+                        required
+                    >
+                        <option value="">Chargement…</option>
+                    </select>
+
+                    <label for="spectacle-creneau">Heure de passage</label>
+                    <input
+                        class="u-full-width"
+                        id="spectacle-creneau"
+                        name="creneau"
+                        type="time"
+                        required
+                    >
+
+                    <button class="button button-primary" type="submit">
+                        Ajouter le spectacle
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <hr>
+
+        <section>
+            <p class="surtitre">Suivi des ventes</p>
+            <h2>Soirées et recettes</h2>
+
+            <p>
+                Consulte les places disponibles, les billets vendus,
+                l'avancement de la programmation et les recettes
+                enregistrées pour chaque soirée.
+            </p>
+
+            <div id="liste-soirees">
+                <p class="message-vide">Chargement des soirées…</p>
+            </div>
+        </section>
+
+    </main>
+</body>
+</html>

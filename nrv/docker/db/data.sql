@@ -2,11 +2,19 @@ USE `nrv_db`;
 
 START TRANSACTION;
 
-
 DELETE FROM spectacle_artiste;
 DELETE FROM spectacle;
 DELETE FROM soiree;
 DELETE FROM artiste;
+
+INSERT INTO utilisateur (nom, prenom, email, password)
+VALUES (
+    'Admin',
+    'NRV',
+    'admin@nrv.net',
+    '$2y$10$lG/F9lGG.W/xqcJYU2MYc.t23gY48YAklSRCzXyYJNbePL9XV8hZe'
+)
+ON DUPLICATE KEY UPDATE password = VALUES(password);
 
 
 INSERT INTO artiste (id_artiste, nom, information, genre) VALUES
@@ -111,47 +119,177 @@ INSERT INTO soiree (
 (11, 'Rock alternatif international', 'Rock alternatif international', '2026-11-28', '18:00:00', 'Salle Poirel, Nancy', 420, 32.00),
 (12, 'Grande nuit du rock', 'Rock et hard rock', '2026-11-29', '18:30:00', 'Parc de la Pepiniere, Nancy', 1200, 32.00);
 
-
 INSERT INTO spectacle (
     id_spectacle, id_soiree, titre, `description`,
     genre, image, video, creneau
 ) VALUES
-(1, 1, 'Metallica', 'Concert hommage a l''univers du heavy metal.', 'Heavy metal', '', '', '19:00:00'),
+(1, 1, 'Metallica',
+ 'Concert hommage a l''univers du heavy metal.',
+ 'Heavy metal',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Metallica%20live%20London%202003-12-19.jpg',
+ 'https://www.youtube.com/results?search_query=Metallica+live+concert',
+ '19:00:00'),
 
-(2, 2, 'AC/DC', 'Un spectacle autour des classiques du hard rock.', 'Hard rock', '', '', '19:00:00'),
-(3, 2, 'Bon Jovi', 'Un concert de rock arena et de grands refrains.', 'Hard rock', '', '', '21:00:00'),
+(2, 2, 'AC/DC',
+ 'Un spectacle autour des classiques du hard rock.',
+ 'Hard rock',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/ACDC%20Concert%2C%20London%20Olympic%20Stadium%2C%202016.jpg',
+ 'https://www.youtube.com/results?search_query=ACDC+live+concert',
+ '19:00:00'),
 
-(4, 3, 'Nirvana Tribute', 'Une soiree hommage a la scene grunge.', 'Grunge', '', '', '18:30:00'),
-(5, 3, 'Foo Fighters', 'Un concert de rock alternatif energique.', 'Rock alternatif', '', '', '20:00:00'),
-(6, 3, 'The Offspring', 'Un spectacle consacre au punk rock.', 'Punk rock', '', '', '21:30:00'),
+(3, 2, 'Bon Jovi',
+ 'Un concert de rock arena et de grands refrains.',
+ 'Hard rock',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Bon%20Jovi%20Richie%20Sambora%20Dublin%2006.jpg',
+ 'https://www.youtube.com/results?search_query=Bon+Jovi+live+concert',
+ '21:00:00'),
 
-(7, 4, 'Ice Nine Kills', 'Un spectacle de metalcore theatrale.', 'Metalcore', '', '', '19:00:00'),
+(4, 3, 'Nirvana Tribute',
+ 'Une soiree hommage a la scene grunge.',
+ 'Grunge',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Nirvana%20around%201992.jpg',
+ 'https://www.youtube.com/results?search_query=Nirvana+tribute+live+concert',
+ '18:30:00'),
 
-(8, 5, 'Les Fatals Picards', 'Un concert de rock francais humoristique.', 'Rock francais', '', '', '19:00:00'),
-(9, 5, 'Falling in Reverse', 'Un spectacle de metalcore et de rock moderne.', 'Metalcore', '', '', '21:00:00'),
+(5, 3, 'Foo Fighters',
+ 'Un concert de rock alternatif energique.',
+ 'Rock alternatif',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Foo%20Fighters%20-%20Rock%20am%20Ring%202018-5935.jpg',
+ 'https://www.youtube.com/results?search_query=Foo+Fighters+live+concert',
+ '20:00:00'),
 
-(10, 6, 'Linkin Park', 'Un concert de nu metal et de rock alternatif.', 'Nu metal', '', '', '18:30:00'),
-(11, 6, 'System of a Down Tribute', 'Un hommage au metal alternatif.', 'Nu metal', '', '', '20:00:00'),
-(12, 6, 'Korn Tribute', 'Un spectacle hommage aux pionniers du nu metal.', 'Nu metal', '', '', '21:30:00'),
+(6, 3, 'The Offspring',
+ 'Un spectacle consacre au punk rock.',
+ 'Punk rock',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Offspringlive.jpg',
+ 'https://www.youtube.com/results?search_query=The+Offspring+live+concert',
+ '21:30:00'),
 
-(13, 7, 'Scorpions', 'Un concert de hard rock classique.', 'Hard rock', '', '', '19:00:00'),
+(7, 4, 'Ice Nine Kills',
+ 'Un spectacle de metalcore theatrale.',
+ 'Metalcore',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Ice%20Nine%20kills.jpg',
+ 'https://www.youtube.com/results?search_query=Ice+Nine+Kills+live+concert',
+ '19:00:00'),
 
-(14, 8, 'Green Day', 'Un spectacle de punk rock et de pop punk.', 'Punk rock', '', '', '19:00:00'),
-(15, 8, 'Sum 41', 'Un concert de punk rock canadien.', 'Punk rock', '', '', '21:00:00'),
+(8, 5, 'Les Fatals Picards',
+ 'Un concert de rock francais humoristique.',
+ 'Rock francais',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Les%20Fatals%20Picards%2020091009%20Aix-en-Provence%20006.jpg',
+ 'https://www.youtube.com/results?search_query=Les+Fatals+Picards+live+concert',
+ '19:00:00'),
 
-(16, 9, 'Muse', 'Un concert de rock alternatif et de grandes ambiances.', 'Rock alternatif', '', '', '18:30:00'),
-(17, 9, 'Royal Blood', 'Un spectacle de rock puissant en duo.', 'Rock alternatif', '', '', '20:00:00'),
-(18, 9, 'The Killers', 'Un concert de rock alternatif et independant.', 'Rock alternatif', '', '', '21:30:00'),
+(9, 5, 'Falling in Reverse',
+ 'Un spectacle de metalcore et de rock moderne.',
+ 'Metalcore',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Falling%20in%20Reverse.jpg',
+ 'https://www.youtube.com/results?search_query=Falling+in+Reverse+live+concert',
+ '21:00:00'),
 
-(19, 10, 'Gojira', 'Un spectacle de metal francais.', 'Metal progressif', '', '', '19:00:00'),
+(10, 6, 'Linkin Park',
+ 'Un concert de nu metal et de rock alternatif.',
+ 'Nu metal',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Linkin%20Park%20at%20ProstoRock.jpg',
+ 'https://www.youtube.com/results?search_query=Linkin+Park+live+concert',
+ '18:30:00'),
 
-(20, 11, 'Ultra Vomit', 'Un concert de metal humoristique.', 'Metal', '', '', '19:00:00'),
-(21, 11, 'Tagada Jones', 'Un spectacle de punk metal francais.', 'Punk metal', '', '', '21:00:00'),
+(11, 6, 'System of a Down Tribute',
+ 'Un hommage au metal alternatif.',
+ 'Nu metal',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/System%20of%20a%20Down%20live%202017.jpg',
+ 'https://www.youtube.com/results?search_query=System+of+a+Down+tribute+live+concert',
+ '20:00:00'),
 
-(22, 12, 'Queen Tribute', 'Un hommage aux grands classiques de Queen.', 'Rock classique', '', '', '18:30:00'),
-(23, 12, 'Guns N'' Roses', 'Un concert de hard rock americain.', 'Hard rock', '', '', '20:00:00'),
-(24, 12, 'Iron Maiden', 'Un spectacle de heavy metal britannique.', 'Heavy metal', '', '', '21:30:00');
+(12, 6, 'Korn Tribute',
+ 'Un spectacle hommage aux pionniers du nu metal.',
+ 'Nu metal',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Korn%20London%201997.jpg',
+ 'https://www.youtube.com/results?search_query=Korn+tribute+live+concert',
+ '21:30:00'),
 
+(13, 7, 'Scorpions',
+ 'Un concert de hard rock classique.',
+ 'Hard rock',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Scorpions%20live%202010.jpg',
+ 'https://www.youtube.com/results?search_query=Scorpions+live+concert',
+ '19:00:00'),
+
+(14, 8, 'Green Day',
+ 'Un spectacle de punk rock et de pop punk.',
+ 'Punk rock',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Green%20Day%20live.jpg',
+ 'https://www.youtube.com/results?search_query=Green+Day+live+concert',
+ '19:00:00'),
+
+(15, 8, 'Sum 41',
+ 'Un concert de punk rock canadien.',
+ 'Punk rock',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Sum%2041%20live%202008.jpg',
+ 'https://www.youtube.com/results?search_query=Sum+41+live+concert',
+ '21:00:00'),
+
+(16, 9, 'Muse',
+ 'Un concert de rock alternatif et de grandes ambiances.',
+ 'Rock alternatif',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/MUSE%20LIVE%20%40%20ROME%20%289329316864%29.jpg',
+ 'https://www.youtube.com/results?search_query=Muse+live+concert',
+ '18:30:00'),
+
+(17, 9, 'Royal Blood',
+ 'Un spectacle de rock puissant en duo.',
+ 'Rock alternatif',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Royalblood.jpg',
+ 'https://www.youtube.com/results?search_query=Royal+Blood+live+concert',
+ '20:00:00'),
+
+(18, 9, 'The Killers',
+ 'Un concert de rock alternatif et independant.',
+ 'Rock alternatif',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/The%20Killers%20in%20concert.jpg',
+ 'https://www.youtube.com/results?search_query=The+Killers+live+concert',
+ '21:30:00'),
+
+(19, 10, 'Gojira',
+ 'Un spectacle de metal francais.',
+ 'Metal progressif',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Gojira%20en%20vivo.jpg',
+ 'https://www.youtube.com/results?search_query=Gojira+live+concert',
+ '19:00:00'),
+
+(20, 11, 'Ultra Vomit',
+ 'Un concert de metal humoristique.',
+ 'Metal',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Ultra%20Vomit%20-%20Concert%202017%20%28Saint-%C3%89tienne%29%20-%20Kammthaar.jpg',
+ 'https://www.youtube.com/results?search_query=Ultra+Vomit+live+concert',
+ '19:00:00'),
+
+(21, 11, 'Tagada Jones',
+ 'Un spectacle de punk metal francais.',
+ 'Punk metal',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Tagada%20Jones.jpg',
+ 'https://www.youtube.com/results?search_query=Tagada+Jones+live+concert',
+ '21:00:00'),
+
+(22, 12, 'Queen Tribute',
+ 'Un hommage aux grands classiques de Queen.',
+ 'Rock classique',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Hannover7907.jpg',
+ 'https://www.youtube.com/results?search_query=Queen+tribute+live+concert',
+ '18:30:00'),
+
+(23, 12, 'Guns N'' Roses',
+ 'Un concert de hard rock americain.',
+ 'Hard rock',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Guns_N_Roses_in_concert_in_London_on_1_July_2022_Axl_Rose.jpg',
+ 'https://www.youtube.com/results?search_query=Guns+N%27+Roses+live+concert',
+ '20:00:00'),
+
+(24, 12, 'Iron Maiden',
+ 'Un spectacle de heavy metal britannique.',
+ 'Heavy metal',
+ 'https://commons.wikimedia.org/wiki/Special:FilePath/Concert%20Iron%20Maiden%20200725%20Albatros.jpg',
+ 'https://www.youtube.com/results?search_query=Iron+Maiden+live+concert',
+ '21:30:00');
 
 INSERT INTO spectacle_artiste (id_spectacle, id_artiste) VALUES
 (1, 1),

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/css/style.css">
     <script src="/js/api.js" defer></script>
     <script src="/js/main.js" defer></script>
+    <script src="/js/role-ui.js" defer></script>
 </head>
 <body>
 <header class="entete-site">
@@ -19,7 +20,7 @@
             </div>
             <div class="five columns recherche-entete ordinateur-seulement">
                 <label class="cache-visuellement" for="site-search">Rechercher</label>
-                <input id="site-search" class="u-full-width" type="search" placeholder="Rechercher un groupe, une scène, un pass…">
+                <input id="site-search" class="u-full-width" type="search" placeholder="Rechercher un spectacle ou un groupe…">
             </div>
             <div class="two columns action-entete ordinateur-seulement">
                 <a class="button button-primary bouton-entete" href="/panier.html">Panier ↗</a>
@@ -39,7 +40,7 @@
                 <a class="logo-menu" href="/" aria-label="Accueil"><span>⚡</span>NRV.net</a>
             </div>
             <label class="cache-visuellement" for="mobile-search">Rechercher</label>
-            <input id="mobile-search" class="u-full-width recherche-menu" type="search" placeholder="Rechercher un groupe, une scène, un pass…">
+            <input id="mobile-search" class="u-full-width recherche-menu" type="search" placeholder="Rechercher un spectacle ou un groupe…">
             <a class="button button-primary bouton-menu" href="/panier.html">Panier</a>
             <a class="button button-light bouton-menu" href="/profil.html">Profil</a>
         </div>
@@ -110,5 +111,24 @@
         <div id="soiree-content"></div>
     </section>
 </main>
+
+<dialog id="fiche-artiste" class="panneau-vide fiche-artiste-dialog" aria-labelledby="fiche-artiste-titre">
+    <div class="logo-panneau-vide">
+        <span>NRV<br>LIVE</span>
+        <button
+            class="button button-outline"
+            id="fermer-fiche-artiste"
+            type="button"
+            aria-label="Fermer la fiche"
+        >✕</button>
+    </div>
+
+    <div class="contenu-fiche-artiste">
+        <p class="surtitre">FICHE ARTISTE</p>
+        <h2 id="fiche-artiste-titre">Artiste</h2>
+        <div id="fiche-artiste-contenu"></div>
+    </div>
+</dialog>
+
 </body>
 </html>
