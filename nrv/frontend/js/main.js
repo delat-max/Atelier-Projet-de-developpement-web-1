@@ -108,7 +108,6 @@ function afficherDetail(soiree) {
 		</div>`;
 }
 
-// Remplissage asynchrone des filtres depuis les nouvelles routes
 async function initFiltres() {
     try {
         const [datesRes, genresRes] = await Promise.all([
@@ -237,7 +236,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 			}
 		};
 
-        // Initialisation indépendante des filtres puis de la liste
         await initFiltres();
 		try {
 			const result = await window.NRV_API.getSpectacles();
