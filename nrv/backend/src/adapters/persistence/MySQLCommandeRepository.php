@@ -9,28 +9,34 @@ use DomainException;
 use PDO;
 use Throwable;
 
-final class MySQLCommandeRepository implements CommandeRepositoryInterface {
+final class MySQLCommandeRepository implements CommandeRepositoryInterface
+{
     private const TAUX_REDUIT = 0.80;
+    private const MULTIPLICATEUR_PASS_3J = 3 * 0.97;
 
-    public function __construct(private PDO $pdo) {}
+    private const ID_SOIREE_REFERENCE_PASS = 1;
+
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     public function preparerPaiement(
         int $idUtilisateur,
         int $idCommande
     ): array {
-        $stmt = $this->pdo->prepare(
-            "SELECT id_commande, montant_total, statut
+        $stmtCommande = $this->pdo->prepare(
+            "SELECT id_commande, statut
              FROM commande
              WHERE id_commande = :id_commande
                AND id_utilisateur = :id_utilisateur"
         );
 
-        $stmt->execute([
+        $stmtCommande->execute([
             'id_commande' => $idCommande,
             'id_utilisateur' => $idUtilisateur,
         ]);
 
-        $commande = $stmt->fetch();
+        $commande = $stmtCommande->fetch();
 
         if ($commande === false) {
             throw new DomainException('commande_introuvable');
@@ -41,15 +47,17 @@ final class MySQLCommandeRepository implements CommandeRepositoryInterface {
         }
 
         $stmtArticles = $this->pdo->prepare(
-            "SELECT p.id_soiree, p.type_tarif, p.quantite,
-                    s.nom, s.prix
+            "SELECT p.id_soiree, p.type_tarif, p.quantite, s.prix
              FROM panier p
              INNER JOIN soiree s ON s.id_soiree = p.id_soiree
              WHERE p.id_commande = :id_commande
              ORDER BY p.id_panier"
         );
 
-        $stmtArticles->execute(['id_commande' => $idCommande]);
+        $stmtArticles->execute([
+            'id_commande' => $idCommande,
+        ]);
+
         $articles = $stmtArticles->fetchAll();
 
         if ($articles === []) {
@@ -59,28 +67,37 @@ final class MySQLCommandeRepository implements CommandeRepositoryInterface {
         $montant = 0.0;
 
         foreach ($articles as $article) {
-            $typeTarif = $article['type_tarif'];
+            $typeTarif = (string) $article['type_tarif'];
+            $quantite = (int) $article['quantite'];
+            $prixBase = (float) $article['prix'];
 
-            if (in_array(
-                $typeTarif,
-                ['pass_3_jours', 'pass_3_jours_reduit'],
-                true
-            )) {
-                throw new DomainException(
-                    'pass_3_jours_schema_incompatible'
-                );
+            if (
+                in_array(
+                    $typeTarif,
+                    ['pass_3_jours', 'pass_3_jours_reduit'],
+                    true
+                )
+            ) {
+                $prixBase = $this->obtenirPrixBasePass();
             }
 
-            if (!in_array($typeTarif, ['normal', 'reduit'], true)) {
+            if ($quantite < 1) {
+                throw new DomainException('quantite_invalide');
+            }
+
+            if (!in_array($typeTarif, [
+                'normal',
+                'reduit',
+                'pass_3_jours',
+                'pass_3_jours_reduit',
+            ], true)) {
                 throw new DomainException('tarif_invalide');
             }
 
-            $prix = $this->calculerPrix(
-                (float) $article['prix'],
+            $montant += $this->calculerPrix(
+                $prixBase,
                 $typeTarif
-            );
-
-            $montant += $prix * (int) $article['quantite'];
+            ) * $quantite;
         }
 
         return [
@@ -129,7 +146,10 @@ final class MySQLCommandeRepository implements CommandeRepositoryInterface {
                  FOR UPDATE"
             );
 
-            $stmtPanier->execute(['id_commande' => $idCommande]);
+            $stmtPanier->execute([
+                'id_commande' => $idCommande,
+            ]);
+
             $articles = $stmtPanier->fetchAll();
 
             if ($articles === []) {
@@ -148,29 +168,36 @@ final class MySQLCommandeRepository implements CommandeRepositoryInterface {
             );
 
             foreach ($articles as $article) {
-                $typeTarif = $article['type_tarif'];
-                $idSoiree = (int) $article['id_soiree'];
+                $typeTarif = (string) $article['type_tarif'];
                 $quantite = (int) $article['quantite'];
+
+                $estPass = in_array(
+                    $typeTarif,
+                    ['pass_3_jours', 'pass_3_jours_reduit'],
+                    true
+                );
 
                 if ($quantite < 1) {
                     throw new DomainException('quantite_invalide');
                 }
 
-                if (in_array(
-                    $typeTarif,
-                    ['pass_3_jours', 'pass_3_jours_reduit'],
-                    true
-                )) {
-                    throw new DomainException(
-                        'pass_3_jours_schema_incompatible'
-                    );
-                }
-
-                if (!in_array($typeTarif, ['normal', 'reduit'], true)) {
+                if (!in_array($typeTarif, [
+                    'normal',
+                    'reduit',
+                    'pass_3_jours',
+                    'pass_3_jours_reduit',
+                ], true)) {
                     throw new DomainException('tarif_invalide');
                 }
 
-                $stmtSoiree->execute(['id_soiree' => $idSoiree]);
+                $idSoiree = $estPass
+                    ? self::ID_SOIREE_REFERENCE_PASS
+                    : (int) $article['id_soiree'];
+
+                $stmtSoiree->execute([
+                    'id_soiree' => $idSoiree,
+                ]);
+
                 $soiree = $stmtSoiree->fetch();
 
                 if ($soiree === false) {
@@ -184,25 +211,38 @@ final class MySQLCommandeRepository implements CommandeRepositoryInterface {
 
                 $montantCalcule += $prixUnitaire * $quantite;
 
-                $quantitesParSoiree[$idSoiree] =
-                    ($quantitesParSoiree[$idSoiree] ?? 0) + $quantite;
+                if (!$estPass) {
+                    $quantitesParSoiree[$idSoiree] =
+                        ($quantitesParSoiree[$idSoiree] ?? 0)
+                        + $quantite;
+                }
 
                 $articlesValides[] = [
                     'id_soiree' => $idSoiree,
-                    'nom_soiree' => $soiree['nom'],
+                    'nom_soiree' => $estPass
+                        ? 'Pass 3 jours'
+                        : $soiree['nom'],
                     'type_tarif' => $typeTarif,
                     'quantite' => $quantite,
+                    'est_pass' => $estPass,
                 ];
             }
 
             $montantCalcule = round($montantCalcule, 2);
 
-            if (abs($montantCalcule - $montantConfirme) > 0.009) {
+            if (
+                abs(
+                    $montantCalcule - round($montantConfirme, 2)
+                ) > 0.009
+            ) {
                 throw new DomainException('montant_modifie');
             }
 
             foreach ($quantitesParSoiree as $idSoiree => $quantite) {
-                $stmtSoiree->execute(['id_soiree' => $idSoiree]);
+                $stmtSoiree->execute([
+                    'id_soiree' => $idSoiree,
+                ]);
+
                 $soiree = $stmtSoiree->fetch();
 
                 if (
@@ -215,15 +255,17 @@ final class MySQLCommandeRepository implements CommandeRepositoryInterface {
 
             $stmtStock = $this->pdo->prepare(
                 "UPDATE soiree
-                 SET places_disponibles = places_disponibles - :quantite
-                 WHERE id_soiree = :id_soiree
-                   AND places_disponibles >= :quantite"
+                SET places_disponibles =
+                    places_disponibles - :quantite_debit
+                WHERE id_soiree = :id_soiree
+                AND places_disponibles >= :quantite_minimum"
             );
 
             foreach ($quantitesParSoiree as $idSoiree => $quantite) {
                 $stmtStock->execute([
-                    'quantite' => $quantite,
+                    'quantite_debit' => $quantite,
                     'id_soiree' => $idSoiree,
+                    'quantite_minimum' => $quantite,
                 ]);
 
                 if ($stmtStock->rowCount() !== 1) {
@@ -251,7 +293,13 @@ final class MySQLCommandeRepository implements CommandeRepositoryInterface {
 
             foreach ($articlesValides as $article) {
                 for ($i = 0; $i < $article['quantite']; $i++) {
-                    $reference = 'NRV-' . strtoupper(
+                    $prefixe = match ($article['type_tarif']) {
+                        'pass_3_jours' => 'NRV-P3-',
+                        'pass_3_jours_reduit' => 'NRV-P3R-',
+                        default => 'NRV-',
+                    };
+
+                    $reference = $prefixe . strtoupper(
                         bin2hex(random_bytes(8))
                     );
 
@@ -310,12 +358,158 @@ final class MySQLCommandeRepository implements CommandeRepositoryInterface {
         }
     }
 
+    public function obtenirBilletParToken(string $token): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT
+                b.reference,
+                b.categorie_tarif,
+                u.prenom AS prenom_acheteur,
+                u.nom AS nom_acheteur,
+                CASE
+                    WHEN b.categorie_tarif IN (
+                        'pass_3_jours',
+                        'pass_3_jours_reduit'
+                    ) THEN 'Pass 3 jours'
+                    ELSE s.nom
+                END AS nom_soiree,
+                CASE
+                    WHEN b.categorie_tarif IN (
+                        'pass_3_jours',
+                        'pass_3_jours_reduit'
+                    ) THEN NULL
+                    ELSE s.`date`
+                END AS date_soiree,
+                CASE
+                    WHEN b.categorie_tarif IN (
+                        'pass_3_jours',
+                        'pass_3_jours_reduit'
+                    ) THEN NULL
+                    ELSE s.horaire_debut
+                END AS horaire_debut,
+                CASE
+                    WHEN b.categorie_tarif IN (
+                        'pass_3_jours',
+                        'pass_3_jours_reduit'
+                    ) THEN NULL
+                    ELSE s.lieu
+                END AS lieu
+            FROM billet b
+            INNER JOIN commande c
+                ON c.id_commande = b.id_commande
+            INNER JOIN utilisateur u
+                ON u.id_utilisateur = c.id_utilisateur
+            INNER JOIN soiree s
+                ON s.id_soiree = b.id_soiree
+            WHERE b.token = :token
+            LIMIT 1"
+        );
+
+        $stmt->execute([
+            'token' => $token,
+        ]);
+
+        $billet = $stmt->fetch();
+
+        return $billet === false ? null : $billet;
+    }
+
+    public function obtenirBilletsUtilisateur(
+        int $idUtilisateur
+    ): array {
+        $stmt = $this->pdo->prepare(
+            "SELECT
+                b.reference,
+                b.token,
+                b.categorie_tarif,
+                CASE
+                    WHEN b.categorie_tarif IN (
+                        'pass_3_jours',
+                        'pass_3_jours_reduit'
+                    ) THEN 'Pass 3 jours'
+                    ELSE s.nom
+                END AS nom_soiree,
+                CASE
+                    WHEN b.categorie_tarif IN (
+                        'pass_3_jours',
+                        'pass_3_jours_reduit'
+                    ) THEN NULL
+                    ELSE s.`date`
+                END AS date_soiree,
+                CASE
+                    WHEN b.categorie_tarif IN (
+                        'pass_3_jours',
+                        'pass_3_jours_reduit'
+                    ) THEN NULL
+                    ELSE s.horaire_debut
+                END AS horaire_debut,
+                CASE
+                    WHEN b.categorie_tarif IN (
+                        'pass_3_jours',
+                        'pass_3_jours_reduit'
+                    ) THEN NULL
+                    ELSE s.lieu
+                END AS lieu
+            FROM billet b
+            INNER JOIN commande c
+                ON c.id_commande = b.id_commande
+            INNER JOIN soiree s
+                ON s.id_soiree = b.id_soiree
+            WHERE c.id_utilisateur = :id_utilisateur
+            AND c.statut = 'payee'
+            ORDER BY c.`date` DESC, b.id_billet DESC"
+        );
+
+        $stmt->execute([
+            'id_utilisateur' => $idUtilisateur,
+        ]);
+
+        return $stmt->fetchAll();
+    }
+
+    private function obtenirPrixBasePass(): float
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT prix
+             FROM soiree
+             WHERE id_soiree = :id_soiree'
+        );
+
+        $stmt->execute([
+            'id_soiree' => self::ID_SOIREE_REFERENCE_PASS,
+        ]);
+
+        $soiree = $stmt->fetch();
+
+        if ($soiree === false) {
+            throw new DomainException('soiree_introuvable');
+        }
+
+        return (float) $soiree['prix'];
+    }
+
     private function calculerPrix(
         float $prixBase,
         string $typeTarif
     ): float {
         return match ($typeTarif) {
-            'reduit' => round($prixBase * self::TAUX_REDUIT, 2),
+            'reduit' => round(
+                $prixBase * self::TAUX_REDUIT,
+                2
+            ),
+
+            'pass_3_jours' => round(
+                $prixBase * self::MULTIPLICATEUR_PASS_3J,
+                2
+            ),
+
+            'pass_3_jours_reduit' => round(
+                $prixBase
+                * self::MULTIPLICATEUR_PASS_3J
+                * self::TAUX_REDUIT,
+                2
+            ),
+
             default => round($prixBase, 2),
         };
     }

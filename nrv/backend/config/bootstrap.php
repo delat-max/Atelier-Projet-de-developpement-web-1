@@ -13,11 +13,16 @@ use App\application\usecases\AuthentifierUtilisateur;
 use App\application\usecases\ObtenirProfil;
 use App\application\usecases\ModifierProfil;
 use App\application\usecases\ChangerMotDePasse;
+use App\adapters\http\CommandeController;
+use App\adapters\paiement\PaiementSimule;
+use App\adapters\persistence\MySQLCommandeRepository;
+use App\application\usecases\ConfirmerCommande;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Factory\AppFactory;
 use Slim\Exception\HttpNotFoundException;
 use App\adapters\http\PanierController;
+use App\adapters\http\BilletController;
 use App\adapters\persistence\MySQLPanierRepository;
 use App\application\usecases\GererPanier;
 
@@ -57,6 +62,23 @@ $pdo = new PDO(
 
 $panierRepository = new MySQLPanierRepository($pdo);
 $panierController = new PanierController(new GererPanier($panierRepository));
+
+$commandeRepository = new MySQLCommandeRepository($pdo);
+
+$paiementGateway = new PaiementSimule();
+
+$confirmerCommande = new ConfirmerCommande(
+    $commandeRepository,
+    $paiementGateway
+);
+
+$commandeController = new CommandeController(
+    $confirmerCommande
+);
+
+$billetController = new BilletController(
+    $commandeRepository
+);
 
 $catalogRepository = new MySQLCatalogRepository($pdo);
 
@@ -143,7 +165,9 @@ $registerRoutes(
     $app,
     $catalogController,
     $utilisateurController,
-    $panierController
+    $panierController,
+    $commandeController,
+    $billetController
 );
 
 return $app;

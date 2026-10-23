@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Confirmer ma commande — NRV.net</title>
+
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/style.css">
+
+    <script src="/js/main.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="/js/commande.js" defer></script>
+</head>
+<body>
+<header class="entete-site">
+    <div class="container contenu-entete">
+        <div class="row ligne-entete">
+            <div class="three columns colonne-logo">
+                <a class="lien-logo" href="/" aria-label="NRV.net, accueil">
+                    <span class="eclair-logo">⚡</span>NRV<span class="point-logo">.net</span>
+                </a>
+            </div>
+
+            <div class="five columns recherche-entete ordinateur-seulement">
+                <label class="cache-visuellement" for="site-search">Rechercher</label>
+                <input
+                    id="site-search"
+                    class="u-full-width"
+                    type="search"
+                    placeholder="Rechercher un groupe, une scène, un pass…"
+                >
+            </div>
+
+            <div class="two columns action-entete ordinateur-seulement">
+                <a class="button button-primary bouton-entete" href="/panier.html">Panier ↗</a>
+            </div>
+
+            <div class="two columns action-entete ordinateur-seulement">
+                <a class="button button-light bouton-entete" href="/profil-connecte.html">Mon profil</a>
+            </div>
+
+            <button
+                class="bouton-menu-mobile mobile-seulement"
+                type="button"
+                aria-label="Ouvrir le menu"
+                aria-expanded="false"
+            >
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+
+    <nav class="menu-mobile" hidden aria-label="Navigation mobile">
+        <div class="contenu-menu">
+            <div class="haut-menu">
+                <span class="fleche-menu" aria-hidden="true">»</span>
+                <a class="logo-menu" href="/" aria-label="Accueil">
+                    <span>⚡</span>NRV.net
+                </a>
+            </div>
+
+            <a class="button button-primary bouton-menu" href="/panier.html">Panier</a>
+            <a class="button button-light bouton-menu" href="/profil-connecte.html">Mon profil</a>
+        </div>
+    </nav>
+</header>
+
+<main class="container cadre-page">
+    <p class="surtitre">BILLETTERIE NRV.NET</p>
+    <h1 class="titre-page">Finaliser ma commande</h1>
+
+    <p id="commande-identifiant" class="etat-api" aria-live="polite">
+        Chargement de la commande…
+    </p>
+
+    <div class="row">
+        <section class="twelve columns panneau-commande">
+            <h2>Récapitulatif</h2>
+            <div id="commande-resume" aria-live="polite">
+                Chargement du panier…
+            </div>
+        </section>
+    </div>
+
+    <div class="row">
+        <section class="twelve columns panneau-commande">
+            <h2>Informations de l’acheteur</h2>
+
+            <label for="acheteur-nom">Nom associé à ton compte</label>
+            <input
+                id="acheteur-nom"
+                class="u-full-width"
+                type="text"
+                readonly
+                aria-describedby="acheteur-info"
+            >
+
+            <p id="acheteur-info" class="etat-api">
+                Ce nom est récupéré automatiquement depuis ton profil.
+            </p>
+        </section>
+    </div>
+
+    <div class="row">
+        <section class="twelve columns panneau-commande">
+            <h2>Paiement de démonstration</h2>
+
+            <p>
+                Le paiement est simulé pour le projet. Aucune transaction bancaire
+                réelle n’est effectuée. N’utilise pas de vraies informations bancaires.
+            </p>
+
+            <form id="formulaire-paiement">
+                <label for="carte-nom">Nom du titulaire (simulation)</label>
+                <input
+                    id="carte-nom"
+                    name="carte-nom"
+                    class="u-full-width"
+                    type="text"
+                    autocomplete="off"
+                    required
+                >
+
+                <label for="carte-numero">Numéro de carte fictif</label>
+                <input
+                    id="carte-numero"
+                    name="carte-numero"
+                    class="u-full-width"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    pattern="[0-9 ]{12,23}"
+                    placeholder="Uniquement des chiffres fictifs"
+                    required
+                >
+
+                <label for="carte-expiration">Date d’expiration</label>
+                <input
+                    id="carte-expiration"
+                    name="carte-expiration"
+                    class="u-full-width"
+                    type="month"
+                    required
+                >
+
+                <label for="carte-code">Code de sécurité fictif</label>
+                <input
+                    id="carte-code"
+                    name="carte-code"
+                    class="u-full-width"
+                    type="password"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    pattern="[0-9]{3,4}"
+                    required
+                >
+
+                <button class="button button-primary bouton-payer" type="submit">
+                    Confirmer la commande
+                </button>
+            </form>
+        </section>
+    </div>
+
+    <section id="paiement-message" aria-live="polite"></section>
+</main>
+</body>
+</html>

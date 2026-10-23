@@ -10,6 +10,8 @@ use DomainException;
 
 final class GererPanier implements GererPanierInterface
 {
+    private const ID_SOIREE_REFERENCE_PASS = 1;
+
     public function __construct(
         private PanierRepositoryInterface $panierRepository
     ) {
@@ -17,30 +19,64 @@ final class GererPanier implements GererPanierInterface
 
     public function obtenir(int $idUtilisateur): array
     {
-        return $this->panierRepository->obtenirPanierEnCours($idUtilisateur);
+        return $this->panierRepository->obtenirPanierEnCours(
+            $idUtilisateur
+        );
     }
 
-    public function synchroniser(int $idUtilisateur, array $articles): array
-    {
+    public function synchroniser(
+        int $idUtilisateur,
+        array $articles
+    ): array {
         $articlesValides = [];
+
         foreach ($articles as $article) {
             if (!is_array($article)) {
                 throw new DomainException('article_invalide');
             }
 
-            $idSoiree = filter_var($article['id_soiree'] ?? null, FILTER_VALIDATE_INT);
-            $quantite = filter_var($article['quantite'] ?? null, FILTER_VALIDATE_INT);
+            $quantite = filter_var(
+                $article['quantite'] ?? null,
+                FILTER_VALIDATE_INT
+            );
+
             $typeTarif = $article['type_tarif'] ?? 'normal';
 
             if (
-                $idSoiree === false || $idSoiree < 1 ||
-                $quantite === false || $quantite < 1 ||
-                !in_array($typeTarif, ['normal', 'reduit', 'pass_3_jours', 'pass_3_jours_reduit'], true)
+                $quantite === false ||
+                $quantite < 1 ||
+                !in_array($typeTarif, [
+                    'normal',
+                    'reduit',
+                    'pass_3_jours',
+                    'pass_3_jours_reduit',
+                ], true)
             ) {
                 throw new DomainException('article_invalide');
             }
 
-            $cle = $idSoiree . '_' . $typeTarif;
+            $estPass = in_array(
+                $typeTarif,
+                ['pass_3_jours', 'pass_3_jours_reduit'],
+                true
+            );
+
+            if ($estPass) {
+                $idSoiree = self::ID_SOIREE_REFERENCE_PASS;
+                $cle = $typeTarif;
+            } else {
+                $idSoiree = filter_var(
+                    $article['id_soiree'] ?? null,
+                    FILTER_VALIDATE_INT
+                );
+
+                if ($idSoiree === false || $idSoiree < 1) {
+                    throw new DomainException('article_invalide');
+                }
+
+                $cle = $idSoiree . '_' . $typeTarif;
+            }
+
             if (isset($articlesValides[$cle])) {
                 $articlesValides[$cle]['quantite'] += $quantite;
             } else {

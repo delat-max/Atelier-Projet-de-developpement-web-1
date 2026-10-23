@@ -423,7 +423,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             let html = '<div class="twelve columns">';
             for (let i = 1; i <= meta.total_pages; i += 1) {
                 const isCurrent = i === meta.current_page;
-                html += `<button class="button ${isCurrent ? 'button-primary' : ''} btn-page" type="button" data-page="${i}" aria-current="${isCurrent ? 'page' : 'false'}" style="margin: 0 4px;">${i}</button>`;
+                html += `<button class="button ${isCurrent ? 'button-primary' : ''} btn-page" type="button" data-page="${i}" aria-current="${isCurrent ? 'page' : 'false'}">${i}</button>`;
             }
             html += '</div>';
             paginationContainer.innerHTML = html;
@@ -473,13 +473,21 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
 
         if (filtreDate) {
-            filtreDate.addEventListener('change', chargerSpectaclesFiltres);
+            filtreDate.addEventListener('change', function () {
+                chargerSpectaclesFiltres(1);
+            });
         }
+
         if (filtreGenre) {
-            filtreGenre.addEventListener('change', chargerSpectaclesFiltres);
+            filtreGenre.addEventListener('change', function () {
+                chargerSpectaclesFiltres(1);
+            });
         }
+
         if (triProgramme) {
-            triProgramme.addEventListener('change', chargerSpectaclesFiltres);
+            triProgramme.addEventListener('change', function () {
+                chargerSpectaclesFiltres(1);
+            });
         }
 
         spectacleList.addEventListener('click', async function (event) {
@@ -586,40 +594,26 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     if (btnPass3J) {
         btnPass3J.addEventListener('click', function () {
-            const select = document.querySelector('#select-soiree-pass');
-            const option = select ? select.options[select.selectedIndex] : null;
-
-            if (!option) {
-                return;
-            }
-
             try {
                 const panier = lirePanier();
-                const idSoiree = Number(option.value);
-                const prixBase = Number(option.dataset.prix);
-                const placesDisponibles = Number(option.dataset.places);
-                const article = panier.find((item) => item.id_soiree === idSoiree && item.type_tarif === 'pass_3_jours');
-                const dejaDansPanier = panier
-                    .filter((item) => item.id_soiree === idSoiree)
-                    .reduce((total, item) => total + item.quantite, 0);
 
-                if (dejaDansPanier + 1 > placesDisponibles) {
-                    document.querySelector('#etat-panier').textContent = 'Il ne reste plus assez de places disponibles pour cette soirée.';
-                    return;
-                }
+                const article = panier.find((item) =>
+                    item.type_tarif === 'pass_3_jours'
+                    || item.type_tarif === 'pass_3_jours_reduit'
+                );
 
                 if (article) {
                     article.quantite += 1;
                 } else {
                     panier.push({
-                        id_soiree: idSoiree,
-                        nom: `Pass 3 Jours — ${option.dataset.nom}`,
-                        date: option.dataset.date,
-                        lieu: option.dataset.lieu,
+                        id_soiree: 1,
+                        nom: 'Pass 3 Jours',
+                        date: '',
+                        lieu: '',
                         type_tarif: 'pass_3_jours',
-                        prix_base: prixBase,
-                        prix: calculerPrixUnitaire(prixBase, 'pass_3_jours'),
-                        places_disponibles: placesDisponibles,
+                        prix_base: 32,
+                        prix: calculerPrixUnitaire(32, 'pass_3_jours'),
+                        places_disponibles: 999999,
                         quantite: 1
                     });
                 }
@@ -627,7 +621,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                 enregistrerPanier(panier);
                 afficherPanier();
             } catch (error) {
-                document.querySelector('#etat-panier').textContent = 'Impossible de modifier le panier.';
+                const status = document.querySelector('#etat-panier');
+
+                if (status) {
+                    status.textContent = 'Impossible d’ajouter le pass au panier.';
+                }
+
                 console.error(error);
             }
         });
@@ -647,9 +646,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(res.data.articles));
                     }
                 }
-            } catch {
-                // Utilisateur non connecté ou panier local
-            }
+            } catch {}
             afficherPanier();
         })();
 
@@ -738,5 +735,48 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return;
             }
         });
+
+        const boutonPayer = document.querySelector('.bouton-payer');
+
+        if (boutonPayer) {
+            boutonPayer.addEventListener('click', async function () {
+                const status = document.querySelector('#etat-panier');
+
+                try {
+                    const panier = lirePanier();
+
+                    if (panier.length === 0) {
+                        throw new Error('Ton panier est vide.');
+                    }
+
+                    boutonPayer.disabled = true;
+
+                    if (!window.NRV_API) {
+                        throw new Error('Le service de billetterie est indisponible.');
+                    }
+
+                    const articles = panier.map(function (article) {
+                        return {
+                            id_soiree: article.id_soiree,
+                            type_tarif: article.type_tarif,
+                            quantite: article.quantite,
+                        };
+                    });
+
+                    await window.NRV_API.syncPanier(articles);
+
+                    window.location.href = '/commande.html';
+                } catch (error) {
+                    if (status) {
+                        status.textContent = error.status === 401
+                            ? 'Connecte-toi à ton compte pour acheter des billets.'
+                            : error.message || 'Impossible de préparer la commande.';
+                    }
+
+                    boutonPayer.disabled = false;
+                    console.error('Préparation de la commande :', error);
+                }
+            });
+        }
     }
 });

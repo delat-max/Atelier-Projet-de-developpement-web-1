@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS `billet` (
     `id_soiree` INT NOT NULL,
     `reference` VARCHAR(50) UNIQUE NOT NULL,
     `token` VARCHAR(64) UNIQUE NOT NULL,
-    `categorie_tarif` ENUM('normal', 'reduit', 'pass_3_jours') NOT NULL,
+    `categorie_tarif` ENUM('normal', 'reduit', 'pass_3_jours', 'pass_3_jours_reduit') NOT NULL,
     FOREIGN KEY (`id_commande`) REFERENCES `commande`(`id_commande`) ON DELETE CASCADE,
     FOREIGN KEY (`id_soiree`) REFERENCES `soiree`(`id_soiree`) ON DELETE CASCADE
 ) ENGINE=InnoDB;

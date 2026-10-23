@@ -175,6 +175,7 @@
         initialiserModificationProfil();
         initialiserModificationMotDePasse();
         initialiserDeconnexion();
+        chargerMesBillets();
     }
 
     function initialiserModificationProfil() {
@@ -274,6 +275,105 @@
                 afficherMessage(error.message, true);
             }
         });
+    }
+
+    async function chargerMesBillets() {
+        const liste = document.querySelector('#mes-billets-liste');
+        const message = document.querySelector('#mes-billets-message');
+
+        if (!liste || !message) {
+            return;
+        }
+
+        try {
+            const resultat = await request(
+                '/api/utilisateurs/me/billets'
+            );
+
+            const billets = Array.isArray(resultat.data)
+                ? resultat.data
+                : [];
+
+            liste.replaceChildren();
+
+            if (billets.length === 0) {
+                message.textContent =
+                    'Tu n’as pas encore de billet acheté.';
+                return;
+            }
+
+            message.textContent =
+                `${billets.length} billet(s) acheté(s).`;
+
+            for (const billet of billets) {
+                const carte = document.createElement('article');
+                carte.className = 'billet-profil';
+
+                const titre = document.createElement('h3');
+                titre.textContent = billet.nom_soiree ?? 'Billet NRV';
+                carte.appendChild(titre);
+
+                const reference = document.createElement('p');
+                reference.textContent =
+                    `Référence : ${billet.reference}`;
+                carte.appendChild(reference);
+
+                const tarif = document.createElement('p');
+                tarif.textContent =
+                    `Tarif : ${libelleTarifProfil(billet.categorie_tarif)}`;
+                carte.appendChild(tarif);
+
+                if (billet.date_soiree) {
+                    const date = document.createElement('p');
+                    date.textContent =
+                        `Date : ${formaterDateProfil(billet.date_soiree)}`;
+                    carte.appendChild(date);
+                }
+
+                if (billet.horaire_debut) {
+                    const horaire = document.createElement('p');
+                    horaire.textContent =
+                        `Début : ${String(billet.horaire_debut).slice(0, 5)}`;
+                    carte.appendChild(horaire);
+                }
+
+                const lien = document.createElement('a');
+                const url = new URL('/billet.html', window.location.origin);
+                url.searchParams.set('token', billet.token);
+                lien.href = url.href;
+                lien.className = 'button button-primary';
+                lien.textContent = 'Voir et imprimer le billet';
+                carte.appendChild(lien);
+
+                liste.appendChild(carte);
+            }
+        } catch (error) {
+            message.textContent =
+                error.message || 'Impossible de charger les billets.';
+        }
+    }
+
+    function libelleTarifProfil(typeTarif) {
+        const libelles = {
+            normal: 'Normal',
+            reduit: 'Réduit',
+            pass_3_jours: 'Pass 3 jours',
+            pass_3_jours_reduit: 'Pass 3 jours réduit',
+        };
+
+        return libelles[typeTarif] ?? 'Non précisé';
+    }
+
+    function formaterDateProfil(valeur) {
+        const date = new Date(`${valeur}T00:00:00`);
+
+        if (Number.isNaN(date.getTime())) {
+            return valeur;
+        }
+
+        return new Intl.DateTimeFormat('fr-FR', {
+            dateStyle: 'long',
+        }).format(date);
     }
 
     initialiserConnexion();

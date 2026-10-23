@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mon billet — NRV</title>
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="/js/billet.js" defer></script>
+</head>
+<body>
+    <main class="conteneur-commande">
+        <h1>Mon billet NRV</h1>
+
+        <p id="billet-message" role="status" aria-live="polite">
+            Chargement du billet…
+        </p>
+
+        <section id="billet-contenu" class="carte-billet" hidden>
+            <h2 id="billet-nom"></h2>
+
+            <p>
+                <strong>Référence :</strong>
+                <span id="billet-reference"></span>
+            </p>
+
+            <p>
+                <strong>Nom :</strong>
+                <span id="billet-acheteur"></span>
+            </p>
+
+            <p>
+                <strong>Tarif :</strong>
+                <span id="billet-tarif"></span>
+            </p>
+
+            <p id="billet-date-conteneur" hidden>
+                <strong>Date :</strong>
+                <span id="billet-date"></span>
+            </p>
+
+            <p id="billet-horaire-conteneur" hidden>
+                <strong>Horaire :</strong>
+                <span id="billet-horaire"></span>
+            </p>
+
+            <p id="billet-lieu-conteneur" hidden>
+                <strong>Lieu :</strong>
+                <span id="billet-lieu"></span>
+            </p>
+
+            <div id="billet-qr" class="billet-qr"></div>
+
+            <p>
+                Présente ce QR code selon les modalités d’accès du festival.
+            </p>
+
+            <button type="button" id="billet-imprimer">
+                Imprimer le billet
+            </button>
+        </section>
+    </main>
+</body>
+</html>

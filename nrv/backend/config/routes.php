@@ -5,13 +5,17 @@ declare(strict_types=1);
 use App\adapters\http\CatalogController;
 use App\adapters\http\UtilisateurController;
 use App\adapters\http\PanierController;
+use App\adapters\http\CommandeController;
+use App\adapters\http\BilletController;
 use Slim\App;
 
 return static function (
     App $app,
     CatalogController $catalogController,
     UtilisateurController $utilisateurController,
-    PanierController $panierController
+    PanierController $panierController,
+    CommandeController $commandeController,
+    BilletController $billetController
 ): void {
     $app->get('/api/dates', [$catalogController, 'dates']);
 
@@ -65,5 +69,20 @@ return static function (
     $app->put(
         '/api/panier', 
         [$panierController, 'synchroniser']
+    );
+
+    $app->post(
+        '/api/commandes/{id}/paiement',
+        [$commandeController, 'confirmer']
+    );
+
+    $app->get(
+        '/api/billets/{token}',
+        [$billetController, 'obtenir']
+    );
+
+    $app->get(
+        '/api/utilisateurs/me/billets',
+        [$billetController, 'mesBillets']
     );
 };

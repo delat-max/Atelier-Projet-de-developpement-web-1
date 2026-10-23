@@ -99,17 +99,17 @@ INSERT INTO soiree (
     lieu, places_disponibles, prix
 ) VALUES
 (1, 'Legendes du hard rock', 'Hard rock et classiques', '2026-11-06', '18:00:00', 'L''Autre Canal, Nancy', 850, 32.00),
-(2, 'Nuit punk rock', 'Punk rock et pop punk', '2026-11-07', '18:30:00', 'Salle Poirel, Nancy', 420, 25.00),
-(3, 'Rock alternatif', 'Rock alternatif et independant', '2026-11-08', '18:00:00', 'Parc de la Pepiniere, Nancy', 1200, 30.00),
-(4, 'Metal moderne', 'Metalcore et metal alternatif', '2026-11-13', '18:30:00', 'L''Autre Canal, Nancy', 850, 35.00),
-(5, 'Rock francais', 'Rock francais et punk', '2026-11-14', '18:00:00', 'Salle Poirel, Nancy', 420, 28.00),
-(6, 'Metal extreme', 'Heavy metal et metal industriel', '2026-11-15', '18:30:00', 'Parc de la Pepiniere, Nancy', 1200, 38.00),
-(7, 'Rock des annees 80', 'Hard rock et rock classique', '2026-11-20', '18:00:00', 'L''Autre Canal, Nancy', 850, 30.00),
-(8, 'Pop punk festival', 'Pop punk et punk rock', '2026-11-21', '18:30:00', 'Salle Poirel, Nancy', 420, 27.00),
-(9, 'Indie rock night', 'Rock independant et garage rock', '2026-11-22', '18:00:00', 'Parc de la Pepiniere, Nancy', 1200, 29.00),
-(10, 'Metal francais', 'Metal et scene francaise', '2026-11-27', '18:30:00', 'L''Autre Canal, Nancy', 850, 34.00),
-(11, 'Rock alternatif international', 'Rock alternatif international', '2026-11-28', '18:00:00', 'Salle Poirel, Nancy', 420, 31.00),
-(12, 'Grande nuit du rock', 'Rock et hard rock', '2026-11-29', '18:30:00', 'Parc de la Pepiniere, Nancy', 1200, 40.00);
+(2, 'Nuit punk rock', 'Punk rock et pop punk', '2026-11-07', '18:30:00', 'Salle Poirel, Nancy', 420, 32.00),
+(3, 'Rock alternatif', 'Rock alternatif et independant', '2026-11-08', '18:00:00', 'Parc de la Pepiniere, Nancy', 1200, 32.00),
+(4, 'Metal moderne', 'Metalcore et metal alternatif', '2026-11-13', '18:30:00', 'L''Autre Canal, Nancy', 850, 32.00),
+(5, 'Rock francais', 'Rock francais et punk', '2026-11-14', '18:00:00', 'Salle Poirel, Nancy', 420, 32.00),
+(6, 'Metal extreme', 'Heavy metal et metal industriel', '2026-11-15', '18:30:00', 'Parc de la Pepiniere, Nancy', 1200, 32.00),
+(7, 'Rock des annees 80', 'Hard rock et rock classique', '2026-11-20', '18:00:00', 'L''Autre Canal, Nancy', 850, 32.00),
+(8, 'Pop punk festival', 'Pop punk et punk rock', '2026-11-21', '18:30:00', 'Salle Poirel, Nancy', 420, 32.00),
+(9, 'Indie rock night', 'Rock independant et garage rock', '2026-11-22', '18:00:00', 'Parc de la Pepiniere, Nancy', 1200, 32.00),
+(10, 'Metal francais', 'Metal et scene francaise', '2026-11-27', '18:30:00', 'L''Autre Canal, Nancy', 850, 32.00),
+(11, 'Rock alternatif international', 'Rock alternatif international', '2026-11-28', '18:00:00', 'Salle Poirel, Nancy', 420, 32.00),
+(12, 'Grande nuit du rock', 'Rock et hard rock', '2026-11-29', '18:30:00', 'Parc de la Pepiniere, Nancy', 1200, 32.00);
 
 
 INSERT INTO spectacle (

@@ -995,8 +995,6 @@ select option {
     background: #1d1f23;
     color: var(--white);
 }
-
-/* Mise en évidence au survol */
 select:hover,
 input[type="text"]:hover,
 input[type="search"]:hover,
@@ -1054,7 +1052,169 @@ input[type="checkbox"]
 {
     width: 100%;
 }
-
+.carte-billet 
+{
+    margin: 1.5rem 0;
+    padding: 2rem;
+    border: 1px solid #d6d6d6;
+    border-radius: 8px;
+    background: #fff;
+    overflow-wrap: anywhere;
+}
+.carte-billet h2,
+.carte-billet h4 
+{
+    margin-top: 0;
+}
+.billet-qr 
+{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    min-height: 160px;
+    margin: 1.5rem 0;
+}
+.billet-qr img,
+.billet-qr canvas 
+{
+    max-width: 100%;
+    height: auto;
+}
+.conteneur-commande 
+{
+    width: min(800px, 92%);
+    margin: 0 auto;
+    padding: 28px 0 45px;
+    box-sizing: border-box;
+}
+@media print 
+{
+    body 
+	{
+        background: #fff;
+    }
+    .conteneur-commande 
+	{
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+    #billet-imprimer 
+	{
+        display: none;
+    }
+    .carte-billet 
+	{
+        border: 1px solid #777;
+        break-inside: avoid;
+    }
+}
+.billet-profil 
+{
+    margin: 0 0 14px;
+    padding: 16px;
+    border: 1px solid #4f5259;
+    border-radius: 6px;
+    background: #1d1f23;
+}
+.billet-profil h3 
+{
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+.billet-profil p 
+{
+    margin: 0 0 7px;
+    color: var(--muted);
+    font-size: 11px;
+}
+.billet-profil .button 
+{
+    margin: 8px 0 0;
+}
+.panneau-commande 
+{
+    margin-bottom: 18px;
+    padding: 18px;
+    border: 1px solid #4f5259;
+    border-radius: 6px;
+    background: #1d1f23;
+}
+.panneau-commande h2 
+{
+    margin-top: 0;
+    font-size: 19px;
+}
+.panneau-commande p 
+{
+    color: var(--muted);
+    line-height: 1.5;
+}
+.panneau-commande label 
+{
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+}
+.panneau-commande input 
+{
+    color: var(--white);
+}
+#commande-resume ul 
+{
+    padding-left: 22px;
+}
+#commande-resume li 
+{
+    margin-bottom: 8px;
+}
+#paiement-message 
+{
+    margin-top: 18px;
+}
+.carte-billet 
+{
+    color: #17181b;
+}
+.carte-billet h2,
+.carte-billet h3,
+.carte-billet h4 
+{
+    color: #17181b;
+}
+.carte-billet p 
+{
+    color: #303238;
+}
+@media print 
+{
+    body 
+	{
+        background: #fff;
+        color: #17181b;
+    }
+    .entete-site,
+    #formulaire-paiement,
+    #billet-imprimer,
+    .button 
+	{
+        display: none !important;
+    }
+    .carte-billet 
+	{
+        color: #17181b;
+        border: 1px solid #777;
+        break-inside: avoid;
+    }
+    .carte-billet h2,
+    .carte-billet h3,
+    .carte-billet h4,
+    .carte-billet p 
+	{
+        color: #17181b;
+    }
+}
 @media (max-width:749px)
 {
 	body
