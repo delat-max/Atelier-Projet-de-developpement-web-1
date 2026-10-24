@@ -1,0 +1,17 @@
+FROM php:8.3-cli
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip libxml2-dev libonig-dev \
+    && docker-php-ext-install dom mbstring xml xmlwriter pdo_mysql \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+
+WORKDIR /app
+
+COPY backend/composer.json ./composer.json
+COPY backend/ ./
+
+RUN composer install --no-interaction --prefer-dist
+
+CMD ["composer", "test"]
